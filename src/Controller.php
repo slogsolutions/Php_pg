@@ -89,14 +89,16 @@ function build_items_from_post(): array {
                     $rows = [];
                     foreach ($rowsIn as $r) {
                         if (!is_array($r)) $r = [$r];
+                        // Ensure each row element is string (to handle the dropdown value which may be "Other" but content is in the input)
                         $rows[] = array_map(static function ($c) { return (string)$c; }, $r);
                     }
 
                     $out[] = [
                         'type'     => 'table', // <-- ensure type is persisted
                         'label'    => $title !== '' ? $title : 'Table',
+                        $is_key_value = ($cols[0] ?? '') === 'label' && ($cols[1] ?? '') === 'content' && count($cols) === 2,
                         'body'     => json_encode([
-                            '__kind'  => 'table',
+                            '__kind'  => $is_key_value ? 'key_value_table' : 'table', // Differentiate if it's the standard 2-col key-value table
                             'title'   => $title,
                             'columns' => $cols,
                             'rows'    => $rows,
@@ -105,7 +107,9 @@ function build_items_from_post(): array {
                     ];
                     continue;
                 }
-
+                
+                // REMOVED: NEW: COURSE DETAILS / KEY-VALUE TABLE logic
+                
                 // CONTENT (default)
                 $b    = is_array($it['body'] ?? null) ? $it['body'] : [];
                 $sub  = trim((string)($b['subTitle'] ?? ($label !== '' ? $label : 'Course Content')));
@@ -213,18 +217,22 @@ function route_edit_form($id) {
                 ];
                 continue;
             }
-            if ($decoded['__kind'] === 'table') {
+            // MODIFIED: 'key_value_table' now uses type 'table' for editing
+            if ($decoded['__kind'] === 'table' || $decoded['__kind'] === 'key_value_table') {
                 $items_for_editor[] = [
                     'type'  => 'table',
                     'label' => $decoded['title'] ?? ($r['label'] ?? 'Table'),
                     'body'  => [
                         'title'   => $decoded['title'] ?? ($r['label'] ?? 'Table'),
-                        'columns' => $decoded['columns'] ?? [],
+                        'columns' => $decoded['columns'] ?? ['label', 'content'], // Default columns
                         'rows'    => $decoded['rows'] ?? [],
                     ],
                 ];
                 continue;
             }
+
+            // REMOVED: NEW: COURSE DETAILS / KEY-VALUE TABLE logic
+            
             // content
             $items_for_editor[] = [
                 'type'  => 'content',

@@ -16,38 +16,28 @@ $asset = function (string $rel) use ($publicRoot): string {
   <meta charset="utf-8">
   <title><?= htmlspecialchars($proposal_data["title"]) ?></title>
 
-  <!-- Set base to /public so any remaining relative URLs resolve correctly -->
   <base href="<?= 'file://' . $publicRoot . '/' ?>">
 
-  <!-- Load the PDF stylesheet from the filesystem (most reliable for Dompdf) -->
   <link rel="stylesheet" href="<?= $asset('assets/pdf.css') ?>">
 
-  <!-- Minimal inline rules to guarantee correct paging regardless of external css -->
-  <style>
+<style>
     @page { size: A4; margin: 0; }
     html, body { margin: 0; padding: 0; }
-    .page {
-      box-sizing: border-box;
-      width: 210mm;
-      height: 297mm;
-      page-break-after: always;
-    }
-    .page:last-of-type { page-break-after: auto; }
     /* Keep cover content on the same page; push date to the bottom */
     .cover .cover-inner {
-      min-height: 100%;
+      min-height: 100vh; /* Use min-height 100vh (Dompdf uses this for 100%) */
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
+    /* Enforce a page break before the Introduction and all subsequent dynamic sections */
+    .page-break-before { page-break-before: always; }
   </style>
 </head>
 <body>
 
-  <!-- ===== COVER PAGE ===== -->
   <section class="page cover">
     <div class="cover-inner">
-      <!-- Header/title block -->
       <header class="cover-header">
         <div class="title-block">
           <div class="line1">PROPOSAL ON</div>
@@ -60,18 +50,15 @@ $asset = function (string $rel) use ($publicRoot): string {
           <div class="db-company"><strong>SLOG SOLUTIONS PRIVATE LIMITED</strong></div>
         </div>
 
-        <!-- TOP STRIP -->
         <div class="top-strip">
           <img src="<?= $asset('assets/strip.png') ?>" alt="top strip" class="strip-top"/>
         </div>
       </header>
 
-      <!-- BANNER -->
       <div class="banner-wrap">
         <img src="<?= $asset('assets/banner.png') ?>" alt="banner" class="banner"/>
       </div>
 
-      <!-- BOTTOM STRIP (you have both strip2.jpg and strip2.png in assets; keep .jpg as in your tree) -->
       <div class="bottom-strip">
         <img src="<?= $asset('assets/strip2.jpg') ?>" alt="bottom strip" class="strip-bottom"/>
       </div>
@@ -85,8 +72,7 @@ $asset = function (string $rel) use ($publicRoot): string {
     </div>
   </section>
 
-  <!-- ===== Content pages: intro ===== -->
-  <section class="page content">
+  <section class="page content page-break-before">
     <div class="content-header">
       <div class="content-title">
         PROPOSAL FOR <?= htmlspecialchars($proposal_data["title"]) ?>
@@ -126,20 +112,19 @@ Thanking you.
     <div class="signature" style="font-family: Cambria, serif; font-size: 12pt;">
       <p style="margin: 0; margin-top: 5px; line-height: 1.4; font-weight: normal;">
         <strong><?= htmlspecialchars($proposal_data["signatory_name"]) ?></strong><br/>
+        <strong><?= htmlspecialchars($proposal_data["signatory_title"]) ?></strong><br/>
         <strong></strong><br/>
-        <strong></strong><br/>
-        Mob: <br/>
-        Email: <a href="mailto:" style="font-weight: 700; color: #0000FF; text-decoration: underline;"><?= htmlspecialchars($proposal_data["signatory_email"]) ?></a><br/>
+        Mob: <?= htmlspecialchars($proposal_data["signatory_phone"]) ?><br/>
+        Email: <a href="mailto:<?= htmlspecialchars($proposal_data["signatory_email"]) ?>" style="font-weight: 700; color: #0000FF; text-decoration: underline;"><?= htmlspecialchars($proposal_data["signatory_email"]) ?></a><br/>
         slog.doon@gmail.com
       </p>
     </div>
   </section>
 
-  <!-- ===== DYNAMIC CONTENT PAGES (each item on its own page) ===== -->
-<?php
+  <?php
 /** We output ONE .page section per item to ensure:
- *  - a new page after each course content
- *  - no extra blank page after the last one (handled by .page:last-of-type)
+ * - a new page before each content section (using page-break-before)
+ * - no extra blank page after the last one (handled by .page:last-of-type in pdf.css)
  */
 foreach ($proposal_items as $it):
     $label    = trim((string)($it['label'] ?? ''));
@@ -154,31 +139,57 @@ foreach ($proposal_items as $it):
     }
     $kind = is_array($body) ? ($body['__kind'] ?? 'content') : null;
 ?>
-  <section class="page program-structure" style="padding:20px 30px; font-family: Cambria, serif; font-size: 12pt;">
+  <section class="page program-structure page-break-before" style="padding:20px 30px; font-family: Cambria, serif; font-size: 12pt;">
     <div class="section">
-      <h3><?= htmlspecialchars($label ?: 'Section') ?></h3>
+      <div class="page-title">
+        <?= htmlspecialchars($label ?: 'Section') ?>
+      </div>
 
       <?php if ($kind === 'page'): ?>
         <h2><?= htmlspecialchars($body['title'] ?? $label ?: 'Page') ?></h2>
 
-      <?php elseif ($kind === 'table'): ?>
+      <?php elseif ($kind === 'table' || $kind === 'key_value_table'): // Use the unified structured table format ?>
         <h3><?= htmlspecialchars($body['title'] ?? $label ?: 'Table') ?></h3>
-        <table style="width:100%; border-collapse:collapse; font-family: Cambria, serif; font-size:12pt;">
-          <?php if (!empty($body['columns'])): ?>
-            <tr>
-              <?php foreach ($body['columns'] as $c): ?>
-                <th style="border:1px solid #777; padding:6px; text-align:left;"><?= htmlspecialchars((string)$c) ?></th>
-              <?php endforeach; ?>
-            </tr>
-          <?php endif; ?>
-          <?php foreach (($body['rows'] ?? []) as $r): ?>
-            <tr>
-              <?php foreach ($r as $c): ?>
-                <td style="border:1px solid #777; padding:6px;"><?= htmlspecialchars((string)$c) ?></td>
-              <?php endforeach; ?>
-            </tr>
-          <?php endforeach; ?>
-        </table>
+        <?php
+            $cols = $body['columns'] ?? [];
+            $rows = $body['rows'] ?? [];
+        ?>
+
+        <?php if (!empty($rows)): ?>
+            <table class="proposal-table" style="width:100%; border-collapse:collapse; font-family: Cambria, serif; font-size:12pt; margin-top:10px;">
+                <?php if ($kind === 'table'): // Show headers for generic table ?>
+                <thead>
+                    <tr>
+                        <?php foreach ($cols as $c): ?>
+                            <th style="border:1px solid #777; padding:8px; text-align:left; font-weight:700; background:#e7f3d9;"><?= htmlspecialchars((string)$c) ?></th>
+                        <?php endforeach; ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($rows as $r): ?>
+                        <tr>
+                            <?php foreach ($r as $c): ?>
+                                <td style="border:1px solid #777; padding:8px; vertical-align:top; word-wrap:break-word;"><?= nl2br(htmlspecialchars((string)$c)) ?></td>
+                            <?php endforeach; ?>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+
+                <?php elseif ($kind === 'key_value_table' && count($cols) === 2 && ($cols[0] === 'label' || $cols[0] === 'Label')): // 2-column key-value table ?>
+                <tbody>
+                    <?php foreach ($rows as $r): ?>
+                        <?php if (!empty($r[0]) || !empty($r[1])): ?>
+                        <tr>
+                            <td style="width: 30%; font-weight: 700; white-space: nowrap; text-align: left; border: 1px solid #777; padding: 8px; vertical-align: top; font-size: 12pt;"><?= htmlspecialchars((string)$r[0]) ?></td>
+                            <td style="width: 70%; white-space: normal; border: 1px solid #777; padding: 8px; vertical-align: top; font-size: 12pt;"><?= nl2br(htmlspecialchars((string)$r[1])) ?></td>
+                        </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </tbody>
+                <?php endif; ?>
+            </table>
+        <?php endif; ?>
+
 
       <?php elseif ($kind === 'content'): ?>
         <?php
@@ -232,17 +243,14 @@ foreach ($proposal_items as $it):
   </section>
 <?php endforeach; ?>
 
-  <!-- ===== ABOUT PAGE (optional) ===== -->
   <?php if (!empty($proposal_data['include_about'])): ?>
-<section class="page about" style="font-family: Cambria, serif; padding: 20px 0 0 0;">
-  <!-- Full-width green strip with black, underlined heading -->
+<section class="page about page-break-before" style="font-family: Cambria, serif; padding: 20px 0 0 0;">
   <div style="background:#c8dca4; width:100%; padding:6px 12px; box-sizing:border-box;">
     <span style="font-size:14pt; font-weight:700; color:#000; text-decoration:underline;">
       ABOUT SLOG SOLUTIONS PVT. LTD.
     </span>
   </div>
 
-  <!-- List block: absolute-left bullets, slight gap, small right margin -->
   <ul style="
       list-style-position: outside;
       margin: 20px 16px 0 0;     /* top gap + small right margin */
@@ -275,15 +283,12 @@ foreach ($proposal_items as $it):
 </section>
   <?php endif; ?>
 
-  <!-- ===== TECHNOLOGIES PAGE (optional) ===== -->
   <?php if (!empty($proposal_data['include_technologies'])): ?>
-    <section class="page technologies" style="padding: 18px 28px; font-family: Cambria, serif;">
-      <!-- Yellow strip title -->
+    <section class="page technologies page-break-before" style="padding: 18px 28px; font-family: Cambria, serif;">
       <div style="background:#ffd800; padding:10px 8px; text-align:center; font-weight:800; font-size:14pt; margin-bottom:12px; font-family: Cambria, serif;">
         TECHNOLOGIES OFFERED BY SLOG SOLUTIONS PVT. LTD.
       </div>
 
-      <!-- 3-column table with header row and bullet lists -->
       <table style="width:90%; margin:0 auto; border-collapse:collapse; table-layout:fixed; font-family: Cambria, serif;">
 
         <thead>

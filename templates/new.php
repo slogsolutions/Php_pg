@@ -1,3 +1,9 @@
+<?php
+// Added the options array for the new course details feature
+$FIRST_COL_OPTIONS = [
+    "Course title", "Duration", "Target audience", "Mode", "Venue", "Seats", "Fees", "Prerequisites", "Other"
+];
+?>
 <?php include __DIR__ . '/_header.php'; ?>
 <link rel="stylesheet" href="/assets/app.css">
 <?php if (function_exists('current_user') && is_logged_in()): ?>
@@ -25,7 +31,6 @@
       <aside class="pages-rail" id="pages-rail"></aside>
 
       <section class="editor">
-        <!-- ========== COVER & INTRODUCTION (page 1 only) ========== -->
         <div id="cover-section">
           <div class="field">
             <label>Title</label>
@@ -82,9 +87,7 @@ $default_intro = "Respected Sir/Ma'am,\n"
             <input type="text" name="signatory_email" value="<?= htmlspecialchars($proposal['signatory_email'] ?? '') ?>">
           </div>
         </div>
-        <!-- ========== END COVER ========== -->
-        <!-- === Optional pages toggles === -->
-<div class="toggle-row">
+        <div class="toggle-row">
   <label class="pill-toggle">
     <input type="checkbox" name="include_about"
       <?= !empty($proposal['include_about']) ? 'checked' : '' ?>>
@@ -99,13 +102,12 @@ $default_intro = "Respected Sir/Ma'am,\n"
 </div>
 
         <hr class="sep" />
-        <!-- dynamic blocks for page 2+ -->
         <div id="blocks-host"></div>
 
-        <!-- hide bottom “Add Page”; sidebar one stays -->
         <div class="controls">
           <button class="btn" type="button" id="add-page" style="display:none">+ Add Page</button>
           <button class="btn" type="button" id="add-table">+ Add Table</button>
+          <button class="btn" type="button" id="add-course-details">+ Add Course Details</button>
           <button class="btn" type="button" id="add-content">+ Add Course Content</button>
         </div>
 
@@ -121,6 +123,8 @@ $default_intro = "Respected Sir/Ma'am,\n"
 
 <script>
   window.__INITIAL_ITEMS__ = <?= json_encode($items ?? $default_items ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+  // NEW: Pass the options array to the frontend editor
+  window.__FIRST_COL_OPTIONS__ = <?= json_encode($FIRST_COL_OPTIONS, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
 </script>
 <script src="/assets/editor.js?v=2"></script>
 <?php include __DIR__ . '/_footer.php'; ?>

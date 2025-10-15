@@ -387,7 +387,7 @@ body {
 .intro-body {
   margin-top: 12px;
   font-size: 12pt;
-  line-height: 1.4;
+  line-height: 1.25; /* Change from 1.4 to 1.25 for a neater look, matching proposal_24 */
   font-family: Cambria, serif;
 }
 

@@ -19,11 +19,14 @@ function proposal_create($data, $items) {
 
 $pos = 0;
 foreach ($items as $it) {
-  if (trim((string)($it['label'] ?? '')) === '' && trim((string)($it['body'] ?? '')) === '') continue;
+  // Use 'type' property from the controller's item data (e.g., 'course_details', 'table', 'content')
+  $item_type = $it['type'] ?? 'content';
+  
+  // No strict filtering on label/body content is needed here as filtering is done in Controller.php
   $stmtItem->execute([
     $proposal_id,
     $it['label'] ?? '',
-    $it['type'] ?? 'content',   // <-- ensure type is set
+    $item_type,
     $it['body'] ?? '',
     $pos++,
   ]);
@@ -146,5 +149,7 @@ function proposal_search(array $opts = []) {
     $stmt->execute($params);
     return $stmt->fetchAll();
 }
-
+// Removed redundant proposal_find definition if it exists in db.php/ProposalModel.php
+// The one above is fine for local use within proposal_delete
+// The original file only contained one definition, which is maintained.
 ?>

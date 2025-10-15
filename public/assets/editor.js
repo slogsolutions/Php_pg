@@ -4,9 +4,15 @@
   const addPageBtn = document.getElementById('add-page');      // may be absent (rail uses #rail-add)
   const addTableBtn = document.getElementById('add-table');    // may be hidden on cover
   const addContentBtn = document.getElementById('add-content');// may be hidden on cover
+  
+  // REMOVED: const addCourseDetailsBtn = document.getElementById('add-course-details'); 
+
   const itemsField = document.getElementById('items-json');    // MUST exist inside the <form>
   const coverSection = document.getElementById('cover-section');
   const form = document.getElementById('editor-form');         // MUST match your <form id>
+
+  // NEW: Get the options array passed from PHP
+  const FIRST_COL_OPTIONS = window.__FIRST_COL_OPTIONS__ || [];
 
   // guard: avoid hard crashes if any required element is missing
   function safeSerialize() {
@@ -29,6 +35,7 @@
 
   function childrenOf(pageIdx) {
     const kids = [];
+    // Start after the page marker and stop at the next page marker or end of array
     for (let i = pageIdx + 1; i < items.length && items[i].type !== 'page'; i++) kids.push({ i, item: items[i] });
     return kids;
   }
@@ -107,6 +114,8 @@
 
     // Child blocks
     kids.forEach(({ i, item }) => {
+      
+      // === GENERIC TABLE EDITOR (MODIFIED TO USE DROPDOWN FOR COL 1) ===
       if (item.type === 'table') {
         const wrap = document.createElement('div');
         wrap.className = 'table-editor';
@@ -123,34 +132,109 @@
         `;
 
         const cols = (item.body && Array.isArray(item.body.columns) ? item.body.columns.slice() : ['label', 'content']);
+        // Rows: must be arrays of strings for generic table
         const rows = (item.body && Array.isArray(item.body.rows) ? item.body.rows.map(r => Array.isArray(r) ? r.slice() : [String(r)]) : [['Course title', '']]);
 
+        const updateItem = () => {
+          item.body = item.body || {};
+          item.body.columns = cols;
+          item.body.rows = rows;
+          safeSerialize();
+        };
+
         const thead = wrap.querySelector('thead tr');
-        cols.forEach(c => { const th = document.createElement('th'); th.textContent = c; thead.appendChild(th); });
+        cols.forEach(c => { 
+          const th = document.createElement('th'); 
+          th.textContent = c; 
+          thead.appendChild(th); 
+        });
 
         const tbody = wrap.querySelector('tbody');
         rows.forEach((r, ri) => {
           const tr = document.createElement('tr');
           cols.forEach((c, ci) => {
             const td = document.createElement('td');
-            td.innerHTML = `<input type="text" value="${r[ci] || ''}">`;
-            td.querySelector('input').oninput = (e) => {
-              item.body = item.body || {};
-              item.body.columns = cols;
-              item.body.rows = rows;
-              rows[ri][ci] = e.target.value;
-              safeSerialize();
-            };
+            
+            if (ci === 0 && cols[0].toLowerCase() === 'label' && FIRST_COL_OPTIONS.length > 0) {
+              // --- COLUMN 1: LABEL (Dropdown + optional text input) ---
+              const select = document.createElement('select');
+              select.style.width = '100%';
+
+              // Populate dropdown options
+              FIRST_COL_OPTIONS.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                if (r[ci] === opt) {
+                  option.selected = true;
+                }
+                select.appendChild(option);
+              });
+              
+              // Text input for 'Other' option
+              const otherInput = document.createElement('input');
+              otherInput.type = 'text';
+              otherInput.style.width = '100%';
+              otherInput.placeholder = 'Type custom label...';
+              
+              // Initial value and display state for 'Other' input
+              const isCustom = FIRST_COL_OPTIONS.indexOf(r[ci]) === -1 && r[ci] !== '';
+              otherInput.value = isCustom ? r[ci] : '';
+              
+              if (isCustom) {
+                  select.value = 'Other';
+              }
+              otherInput.style.display = (select.value === 'Other') ? '' : 'none';
+              
+              // Logic for dropdown change
+              select.onchange = (e) => {
+                const newVal = e.target.value;
+                r[ci] = newVal === 'Other' ? otherInput.value : newVal;
+                otherInput.style.display = (newVal === 'Other') ? '' : 'none';
+                if (newVal !== 'Other') otherInput.value = ''; // Clear other input if a standard option is selected
+                updateItem();
+              };
+
+              // Logic for 'Other' input change
+              otherInput.oninput = (e) => {
+                 // Only update the label if 'Other' is selected
+                 if (select.value === 'Other') {
+                   r[ci] = e.target.value;
+                   updateItem();
+                 }
+              };
+
+              td.appendChild(select);
+              td.appendChild(otherInput);
+
+            } else {
+              // --- OTHER COLUMNS (Standard text input) ---
+              td.innerHTML = `<input type="text" value="${r[ci] || ''}">`;
+              td.querySelector('input').oninput = (e) => {
+                r[ci] = e.target.value;
+                updateItem();
+              };
+            }
             tr.appendChild(td);
           });
           tbody.appendChild(tr);
         });
 
         const addCol = wrap.querySelector('[data-addcol]');
-        if (addCol) addCol.onclick = () => { cols.push('col' + (cols.length + 1)); rows.forEach(r => r.push('')); item.body = Object.assign({}, item.body, { columns: cols, rows }); renderBlocks(); safeSerialize(); };
+        if (addCol) addCol.onclick = () => { 
+          cols.push('col' + (cols.length + 1)); 
+          rows.forEach(r => r.push('')); 
+          updateItem(); 
+          renderBlocks(); 
+        };
 
         const addRow = wrap.querySelector('[data-addrow]');
-        if (addRow) addRow.onclick = () => { rows.push(cols.map(() => '')); item.body = Object.assign({}, item.body, { columns: cols, rows }); renderBlocks(); safeSerialize(); };
+        if (addRow) addRow.onclick = () => { 
+          const newRow = cols.map((c, i) => i === 0 && FIRST_COL_OPTIONS.length > 0 ? FIRST_COL_OPTIONS[0] : '');
+          rows.push(newRow); 
+          updateItem(); 
+          renderBlocks(); 
+        };
 
         const del = wrap.querySelector('[data-delete]');
         if (del) del.onclick = () => { items.splice(i, 1); render(); safeSerialize(); };
@@ -159,6 +243,8 @@
         if (titleInp) titleInp.oninput = (e) => { item.body = item.body || {}; item.body.title = e.target.value; safeSerialize(); };
 
         blocksHost.appendChild(wrap);
+      
+      // === GENERIC COURSE CONTENT EDITOR ===
       } else if (item.type === 'content') {
         const wrap = document.createElement('div');
         wrap.innerHTML = `
@@ -188,9 +274,13 @@
 
   function addTable() {
     const at = currentPageIndex + childrenOf(currentPageIndex).length + 1;
-    items.splice(at, 0, { type: 'table', label: 'Table', body: { title: '', columns: ['label', 'content'], rows: [['Course title', '']] } });
+    // When adding a new table, initialize the first column with the first option
+    const initialRow = ['Course title', '']; 
+    items.splice(at, 0, { type: 'table', label: 'Table', body: { title: '', columns: ['label', 'content'], rows: [initialRow] } });
     render();
   }
+  
+  // REMOVED: function addCourseDetails() {}
 
   function addContent() {
     const at = currentPageIndex + childrenOf(currentPageIndex).length + 1;
@@ -202,6 +292,7 @@
   if (addPageBtn) addPageBtn.onclick = addPage;
   if (addTableBtn) addTableBtn.onclick = addTable;
   if (addContentBtn) addContentBtn.onclick = addContent;
+  // REMOVED: if (addCourseDetailsBtn) addCourseDetailsBtn.onclick = addCourseDetails;
 
   function render() { renderRail(); renderBlocks(); safeSerialize(); }
 
