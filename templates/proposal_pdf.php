@@ -45,13 +45,13 @@ $asset = function (string $rel) use ($publicRoot): string {
         <img src="<?= $asset('assets/strip2.jpg') ?>" alt="bottom strip" class="strip-bottom"/>
       </div>
       <footer class="cover-footer">
-        <div class="footer-left">SLOG- A MSME CERTIFIED ENTERPRISES</div>
-        <div class="footer-right">DATE: <?= htmlspecialchars($proposal_data["date"]) ?></div>
+        <div class="footer-content">
+          <span class="footer-left">SLOG- A MSME CERTIFIED ENTERPRISES</span>
+          <span class="footer-right">DATE: <?= htmlspecialchars($proposal_data["date"]) ?></span>
+        </div>
       </footer>
     </div>
   </section>
-
-  <div class="page-break"></div>
 
   <!-- ===== Content pages: intro ===== -->
   <section class="page content">
@@ -102,124 +102,136 @@ Thanking you.
     </div>
   </section>
 
-  <div class="page-break"></div>
-
   <!-- ===== DYNAMIC CONTENT PAGES ===== -->
-  <section class="page program-structure">
-    <?php 
-    // Group items by page
-    $currentPageItems = [];
-    foreach ($proposal_items as $item) {
-        if (($item['type'] ?? 'content') === 'page') {
-            // Render previous page items if any
-            if (!empty($currentPageItems)) {
-                echo renderPageItems($currentPageItems);
-                echo '<div class="page-break"></div>';
-            }
-            $currentPageItems = [];
-            // Start new page with title
-            echo '<div class="page-title">' . htmlspecialchars($item['label'] ?? 'Untitled Page') . '</div>';
-        } else {
-            $currentPageItems[] = $item;
-        }
-    }
-    // Render remaining items
-    if (!empty($currentPageItems)) {
-        echo renderPageItems($currentPageItems);
-    }
-    
-    function renderPageItems($items) {
-        $output = '';
-        foreach ($items as $item) {
-            $label = trim((string)($item['label'] ?? ''));
-            $rawBody = $item['body'] ?? '';
-            $body = is_array($rawBody) ? $rawBody : (is_string($rawBody) ? json_decode($rawBody, true) : null);
-            if (is_null($body) && is_string($rawBody)) $body = $rawBody;
-            $kind = is_array($body) ? ($body['__kind'] ?? 'content') : null;
-            
-            if ($kind === 'table' || $kind === 'key_value_table') {
-                $output .= renderTable($body, $label);
-            } elseif ($kind === 'content' || $kind === 'legacy') {
-                $output .= renderContent($body, $label);
-            }
-        }
-        return $output;
-    }
-    
-    function renderTable($body, $label) {
-        $cols = $body['columns'] ?? [];
-        $rows = $body['rows'] ?? [];
-        $title = $body['title'] ?? $label ?: 'Table';
-        
-        $output = '';
-        if (!empty($title)) {
-            $output .= '<h3>' . htmlspecialchars($title) . '</h3>';
-        }
-        
-        if (!empty($rows)) {
-            $output .= '<table class="proposal-table">';
-            
-            if (count($cols) !== 2) {
-                $output .= '<thead><tr>';
-                foreach ($cols as $c) {
-                    $output .= '<th>' . htmlspecialchars((string)$c) . '</th>';
-                }
-                $output .= '</tr></thead><tbody>';
-                foreach ($rows as $r) {
-                    $output .= '<tr>';
-                    foreach ($r as $c) {
-                        $output .= '<td>' . nl2br(htmlspecialchars((string)$c)) . '</td>';
-                    }
-                    $output .= '</tr>';
-                }
-                $output .= '</tbody>';
-            } else {
-                $output .= '<tbody>';
-                foreach ($rows as $r) {
-                    if (!empty($r[0]) || !empty($r[1])) {
-                        $output .= '<tr>';
-                        $output .= '<td>' . htmlspecialchars((string)$r[0]) . '</td>';
-                        $output .= '<td>' . nl2br(htmlspecialchars((string)$r[1])) . '</td>';
-                        $output .= '</tr>';
-                    }
-                }
-                $output .= '</tbody>';
-            }
-            $output .= '</table>';
-        }
-        return $output;
-    }
-    
-    function renderContent($body, $label) {
-        $subTitle = trim((string)($body['subTitle'] ?? $label ?: 'Course Content'));
-        $richText = (string)($body['richText'] ?? '');
-        
-        $output = '';
-        if ($subTitle !== '') {
-            $output .= '<h4>' . htmlspecialchars($subTitle) . '</h4>';
-        }
-        
-        // Convert text to bullet points like Django version
-        $lines = array_filter(array_map('trim', explode("\n", $richText)));
-        if (count($lines) > 1) {
-            $output .= '<ul>';
-            foreach ($lines as $line) {
-                if (!empty(trim($line))) {
-                    $output .= '<li>' . htmlspecialchars($line) . '</li>';
-                }
-            }
-            $output .= '</ul>';
-        } else {
-            $output .= '<div class="content-text">' . nl2br(htmlspecialchars($richText)) . '</div>';
-        }
-        
-        return $output;
-    }
-    ?>
-  </section>
+  <?php 
+  // Group items by page
+  $currentPageItems = [];
+  foreach ($proposal_items as $item) {
+      if (($item['type'] ?? 'content') === 'page') {
+          // Render previous page items if any
+          if (!empty($currentPageItems)) {
+              echo '<section class="page program-structure">';
+              echo renderPageItems($currentPageItems);
+              echo '</section>';
+          }
+          $currentPageItems = [];
+      } else {
+          $currentPageItems[] = $item;
+      }
+  }
+  // Render remaining items
+  if (!empty($currentPageItems)) {
+      echo '<section class="page program-structure">';
+      echo renderPageItems($currentPageItems);
+      echo '</section>';
+  }
+  
+  function renderPageItems($items) {
+      $output = '';
+      $hasPageTitle = false;
+      
+      foreach ($items as $item) {
+          $label = trim((string)($item['label'] ?? ''));
+          $rawBody = $item['body'] ?? '';
+          $body = is_array($rawBody) ? $rawBody : (is_string($rawBody) ? json_decode($rawBody, true) : null);
+          if (is_null($body) && is_string($rawBody)) $body = $rawBody;
+          $kind = is_array($body) ? ($body['__kind'] ?? 'content') : null;
+          
+          // Render page title if it exists and we haven't rendered one yet
+          if (!$hasPageTitle && !empty($label)) {
+              $unwantedTitles = ['Cover', 'AI', 'ML'];
+              if (!in_array($label, $unwantedTitles)) {
+                  $output .= '<div class="page-title">' . htmlspecialchars($label) . '</div>';
+                  $hasPageTitle = true;
+              }
+          }
+          
+          if ($kind === 'table' || $kind === 'key_value_table') {
+              $output .= renderTable($body, $label);
+          } elseif ($kind === 'content' || $kind === 'legacy') {
+              $output .= renderContent($body, $label);
+          }
+      }
+      return $output;
+  }
+  
+  function renderTable($body, $label) {
+      $cols = $body['columns'] ?? [];
+      $rows = $body['rows'] ?? [];
+      $title = $body['title'] ?? $label ?: 'Table';
+      
+      $output = '';
+      
+      if (!empty($rows)) {
+          $output .= '<table class="proposal-table">';
+          
+          // Add table caption for title with green background
+          if (!empty($title)) {
+              $output .= '<caption class="table-caption">' . htmlspecialchars($title) . '</caption>';
+          }
+          
+          if (count($cols) !== 2) {
+              $output .= '<thead><tr>';
+              foreach ($cols as $c) {
+                  $output .= '<th>' . htmlspecialchars((string)$c) . '</th>';
+              }
+              $output .= '</tr></thead><tbody>';
+              foreach ($rows as $r) {
+                  $output .= '<tr>';
+                  foreach ($r as $c) {
+                      $output .= '<td>' . nl2br(htmlspecialchars((string)$c)) . '</td>';
+                  }
+                  $output .= '</tr>';
+              }
+              $output .= '</tbody>';
+          } else {
+              $output .= '<tbody>';
+              foreach ($rows as $r) {
+                  if (!empty($r[0]) || !empty($r[1])) {
+                      $output .= '<tr>';
+                      $output .= '<td>' . htmlspecialchars((string)$r[0]) . '</td>';
+                      $output .= '<td>' . nl2br(htmlspecialchars((string)$r[1])) . '</td>';
+                      $output .= '</tr>';
+                  }
+              }
+              $output .= '</tbody>';
+          }
+          $output .= '</table>';
+      }
+      return $output;
+  }
+  
+  function renderContent($body, $label) {
+      $subTitle = trim((string)($body['subTitle'] ?? $label ?: 'Course Content'));
+      $richText = (string)($body['richText'] ?? '');
+      
+      $output = '';
+      
+      // Only show subtitle if it's not unwanted text and we haven't used it as page title
+      $unwantedSubtitles = ['AI', 'ML', 'Cover'];
+      if (!in_array($subTitle, $unwantedSubtitles) && !empty($subTitle) && $subTitle !== $label) {
+          $output .= '<h4 class="content-subtitle">' . htmlspecialchars($subTitle) . '</h4>';
+      }
+      
+      // Convert text to bullet points like Django version
+      $lines = array_filter(array_map('trim', explode("\n", $richText)));
+      if (count($lines) > 1) {
+          $output .= '<ul>';
+          foreach ($lines as $line) {
+              if (!empty(trim($line))) {
+                  $output .= '<li>' . htmlspecialchars($line) . '</li>';
+              }
+          }
+          $output .= '</ul>';
+      } else if (!empty(trim($richText))) {
+          $output .= '<div class="content-text">' . nl2br(htmlspecialchars($richText)) . '</div>';
+      }
+      
+      return $output;
+  }
+  ?>
 
   <?php if (!empty($proposal_data['include_about'])): ?>
-    <div class="page-break"></div>
     <section class="page about">
       <div class="about-header">
         ABOUT SLOG SOLUTIONS PVT. LTD.
@@ -246,7 +258,6 @@ Thanking you.
   <?php endif; ?>
 
   <?php if (!empty($proposal_data['include_technologies'])): ?>
-    <div class="page-break"></div>
     <section class="page technologies">
       <div class="technologies-title">
         TECHNOLOGIES OFFERED BY SLOG SOLUTIONS PVT. LTD.

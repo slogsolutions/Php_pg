@@ -103,7 +103,7 @@ let items = Array.isArray(window.__INITIAL_ITEMS__) && window.__INITIAL_ITEMS__.
       if (addContentBtn) addContentBtn.style.display = '';
     }
 
-    // Page Title
+    // Page Title (KEEP THIS - it's important for page titles)
     const h = document.createElement('div');
     h.className = 'field';
     h.innerHTML = '<label>Page Title</label><input type="text" id="page-title" value="' + (items[currentPageIndex].label || '') + '">';
@@ -120,7 +120,7 @@ let items = Array.isArray(window.__INITIAL_ITEMS__) && window.__INITIAL_ITEMS__.
         wrap.className = 'table-editor';
         wrap.innerHTML = `
           <div class="section-title">Table</div>
-          <div class="field"><label>Table title (optional)</label>
+          <div class="field"><label>Table title (will appear as table caption)</label>
             <input type="text" value="${(item.body && item.body.title) || ''}" data-key="title"></div>
           <div class="controls">
             <button class="btn" type="button" data-addcol>+ Add Column</button>
