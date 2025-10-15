@@ -1,7 +1,4 @@
-@page {
-  size: A4; /* or whatever Proposal-24 used */
-  margin: 20mm 15mm 20mm 15mm; /* copy the exact margins from your React/Django print CSS */
-}
+@page { size: A4; margin: 0; }
 /* === Cambria embedding (must come first) === */
 @font-face {
   font-family: 'Cambria';
@@ -31,7 +28,7 @@
 html, body, .page, * {
   font-family: 'Cambria' !important;
 }
-
+html, body { margin: 0; padding: 0; }
 body { 
   font-family: Cambria, serif; 
   color: #222; 
@@ -40,22 +37,23 @@ body {
 }
 
 /* Each printable page container */
-.page { 
-  width: 100%; 
-  position: relative; 
-  box-sizing: border-box; 
-  min-height: 297mm;
-  font-family: Cambria, serif;
+.page {
+  box-sizing: border-box;
+  width: 210mm;
+  height: 297mm;
+  padding: 18mm;        /* adjust to match proposal_24 visuals */
   page-break-after: always;
 }
-.page:last-child { page-break-after: auto; }
-.avoid-break { page-break-inside: avoid; }
 
-/* Force page break element (used only after course_content) */
-.page-break { 
-  page-break-after: always; 
-  break-after: page;       /* modern */
-}
+/* Do NOT add a blank page after the last section */
+.page:last-of-type { page-break-after: auto; }
+
+/* Utility when you must start a new page BEFORE a block */
+.page-break { page-break-before: always; }
+
+/* Helps Dompdf avoid injecting a blank page for tiny overflows */
+.avoid-break-after { page-break-after: avoid; }
+.avoid-break-inside { page-break-inside: avoid; }
 
 /* COVER container */
 .cover-inner {
@@ -68,6 +66,13 @@ body {
   box-sizing: border-box;
   font-family: Cambria, serif;
 }
+.cover .cover-inner {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* pushes date to the bottom but inside the same page */
+}
+.cover .date { margin-top: 12mm; }
 
 /* Title area */
 .title-block { 

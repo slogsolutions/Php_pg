@@ -4,7 +4,8 @@
   <div class="headerbar">
     <div class="logo">Slog Solutions Pvt Ltd.</div>
     <div>
-      <a class="btn" href="index.php?action=logout">⏻&nbsp;Sign out</a>
+      <a class="btn" href="/logout.php">⏻&nbsp;Sign out</a>
+
       <a class="btn primary" href="index.php?action=new">✨&nbsp;Create New Proposal</a>
     </div>
   </div>

@@ -21,6 +21,26 @@ $asset = function (string $rel) use ($publicRoot): string {
 
   <!-- Load the PDF stylesheet from the filesystem (most reliable for Dompdf) -->
   <link rel="stylesheet" href="<?= $asset('assets/pdf.css') ?>">
+
+  <!-- Minimal inline rules to guarantee correct paging regardless of external css -->
+  <style>
+    @page { size: A4; margin: 0; }
+    html, body { margin: 0; padding: 0; }
+    .page {
+      box-sizing: border-box;
+      width: 210mm;
+      height: 297mm;
+      page-break-after: always;
+    }
+    .page:last-of-type { page-break-after: auto; }
+    /* Keep cover content on the same page; push date to the bottom */
+    .cover .cover-inner {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+  </style>
 </head>
 <body>
 
@@ -64,9 +84,6 @@ $asset = function (string $rel) use ($publicRoot): string {
       </footer>
     </div>
   </section>
-
-
-  <div class="page-break"></div>
 
   <!-- ===== Content pages: intro ===== -->
   <section class="page content">
@@ -118,124 +135,105 @@ Thanking you.
     </div>
   </section>
 
-  <div class="page-break"></div>
+  <!-- ===== DYNAMIC CONTENT PAGES (each item on its own page) ===== -->
+<?php
+/** We output ONE .page section per item to ensure:
+ *  - a new page after each course content
+ *  - no extra blank page after the last one (handled by .page:last-of-type)
+ */
+foreach ($proposal_items as $it):
+    $label    = trim((string)($it['label'] ?? ''));
+    $rawBody  = $it['body'] ?? '';
+    $body     = is_array($rawBody) ? $rawBody
+              : (is_string($rawBody) ? json_decode($rawBody, true) : null);
+    if (is_null($body) && is_string($rawBody)) $body = $rawBody;
 
-<!-- ===== DYNAMIC CONTENT PAGES (from proposal.content) ===== -->
-<section class="page program-structure" style="padding:20px 30px; font-family: Cambria, serif; font-size: 12pt;">
-
-<?php foreach ($proposal_items as $it): 
-    $label = trim((string)($it['label'] ?? ''));
-    $rawBody = $it['body'] ?? '';
-    $after_break = false;
-
-    // Try to normalize $body:
-    // - If already an array, use it.
-    // - If JSON string, decode it.
-    // - Otherwise keep as string (legacy).
-    $body = is_array($rawBody) ? $rawBody
-         : (is_string($rawBody) ? json_decode($rawBody, true) : null);
-
-    if (is_null($body) && is_string($rawBody)) {
-        // not JSON, keep as plain text
-        $body = $rawBody;
-    }
-
-    // Handle [[PAGEBREAK]] marker only for plain-text bodies
+    // [[PAGEBREAK]] marker is no longer needed (each item is its own page), so ignore it
     if (is_string($body) && strpos($body, '[[PAGEBREAK]]') !== false) {
-        $body = str_replace('[[PAGEBREAK]]', '', $body);
-        $after_break = true;
+      $body = str_replace('[[PAGEBREAK]]', '', $body);
     }
-
-    // If structured, determine kind
     $kind = is_array($body) ? ($body['__kind'] ?? 'content') : null;
 ?>
-  <div class="section">
-    <h3><?= htmlspecialchars($label ?: 'Section') ?></h3>
+  <section class="page program-structure" style="padding:20px 30px; font-family: Cambria, serif; font-size: 12pt;">
+    <div class="section">
+      <h3><?= htmlspecialchars($label ?: 'Section') ?></h3>
 
-    <?php if ($kind === 'page'): ?>
-      <h2><?= htmlspecialchars($body['title'] ?? $label ?: 'Page') ?></h2>
+      <?php if ($kind === 'page'): ?>
+        <h2><?= htmlspecialchars($body['title'] ?? $label ?: 'Page') ?></h2>
 
-    <?php elseif ($kind === 'table'): ?>
-      <h3><?= htmlspecialchars($body['title'] ?? $label ?: 'Table') ?></h3>
-      <table style="width:100%; border-collapse:collapse; font-family: Cambria, serif; font-size:12pt;">
-        <?php if (!empty($body['columns'])): ?>
-          <tr>
-            <?php foreach ($body['columns'] as $c): ?>
-              <th style="border:1px solid #777; padding:6px; text-align:left;"><?= htmlspecialchars((string)$c) ?></th>
-            <?php endforeach; ?>
-          </tr>
-        <?php endif; ?>
-        <?php foreach (($body['rows'] ?? []) as $r): ?>
-          <tr>
-            <?php foreach ($r as $c): ?>
-              <td style="border:1px solid #777; padding:6px;"><?= htmlspecialchars((string)$c) ?></td>
-            <?php endforeach; ?>
-          </tr>
-        <?php endforeach; ?>
-      </table>
-
-    <?php elseif ($kind === 'content'): ?>
-      <?php
-        $subTitle = trim((string)($body['subTitle'] ?? $label ?: 'Course Content'));
-        $richText = (string)($body['richText'] ?? '');
-      ?>
-      <?php if ($subTitle !== ''): ?>
-        <h4><?= htmlspecialchars($subTitle) ?></h4>
-      <?php endif; ?>
-      <div class="body"><?= nl2br(htmlspecialchars($richText)) ?></div>
-
-    <?php else: /* Legacy plain-text mode that your old template used */ ?>
-      <?php
-        $text = trim((string)$body);
-        $isCourse = stripos($label, 'COURSE:') === 0;
-        $isTable  = stripos($label, 'TABLE:') === 0;
-      ?>
-
-      <?php if ($isCourse): ?>
-        <?php $lines = array_filter(array_map('trim', preg_split("/\r\n|\r|\n/", $text))); ?>
-        <?php if (!empty($lines)): ?>
-          <ul style="margin:6px 0 14px; font-size:12pt; line-height:1.5; padding-left:20px; list-style-type: disc; font-family: Cambria, serif;">
-            <?php foreach ($lines as $ln): ?>
-              <li><?= htmlspecialchars($ln) ?></li>
-            <?php endforeach; ?>
-          </ul>
-        <?php else: ?>
-          <div style="white-space:pre-line; font-size:12pt; line-height:1.5; font-family: Cambria, serif;">
-            <?= nl2br(htmlspecialchars($text)) ?>
-          </div>
-        <?php endif; ?>
-
-      <?php elseif ($isTable): ?>
-        <?php $rows = array_map('trim', preg_split("/\r\n|\r|\n/", $text)); ?>
+      <?php elseif ($kind === 'table'): ?>
+        <h3><?= htmlspecialchars($body['title'] ?? $label ?: 'Table') ?></h3>
         <table style="width:100%; border-collapse:collapse; font-family: Cambria, serif; font-size:12pt;">
-          <?php foreach ($rows as $r): ?>
-            <?php if ($r === '') continue; $cols = array_map('trim', explode('|', $r)); ?>
+          <?php if (!empty($body['columns'])): ?>
             <tr>
-              <?php foreach ($cols as $c): ?>
-                <td style="border:1px solid #777; padding:6px;"><?= htmlspecialchars($c) ?></td>
+              <?php foreach ($body['columns'] as $c): ?>
+                <th style="border:1px solid #777; padding:6px; text-align:left;"><?= htmlspecialchars((string)$c) ?></th>
+              <?php endforeach; ?>
+            </tr>
+          <?php endif; ?>
+          <?php foreach (($body['rows'] ?? []) as $r): ?>
+            <tr>
+              <?php foreach ($r as $c): ?>
+                <td style="border:1px solid #777; padding:6px;"><?= htmlspecialchars((string)$c) ?></td>
               <?php endforeach; ?>
             </tr>
           <?php endforeach; ?>
         </table>
 
-      <?php else: ?>
-        <div class="body"><?= nl2br(htmlspecialchars($text)) ?></div>
+      <?php elseif ($kind === 'content'): ?>
+        <?php
+          $subTitle = trim((string)($body['subTitle'] ?? $label ?: 'Course Content'));
+          $richText = (string)($body['richText'] ?? '');
+        ?>
+        <?php if ($subTitle !== ''): ?>
+          <h4><?= htmlspecialchars($subTitle) ?></h4>
+        <?php endif; ?>
+        <div class="body"><?= nl2br(htmlspecialchars($richText)) ?></div>
+
+      <?php else: /* Legacy plain-text mode */ ?>
+        <?php
+          $text    = trim((string)$body);
+          $isCourse= stripos($label, 'COURSE:') === 0;
+          $isTable = stripos($label, 'TABLE:') === 0;
+        ?>
+
+        <?php if ($isCourse): ?>
+          <?php $lines = array_filter(array_map('trim', preg_split("/\r\n|\r|\n/", $text))); ?>
+          <?php if (!empty($lines)): ?>
+            <ul style="margin:6px 0 14px; font-size:12pt; line-height:1.5; padding-left:20px; list-style-type: disc; font-family: Cambria, serif;">
+              <?php foreach ($lines as $ln): ?>
+                <li><?= htmlspecialchars($ln) ?></li>
+              <?php endforeach; ?>
+            </ul>
+          <?php else: ?>
+            <div style="white-space:pre-line; font-size:12pt; line-height:1.5; font-family: Cambria, serif;">
+              <?= nl2br(htmlspecialchars($text)) ?>
+            </div>
+          <?php endif; ?>
+
+        <?php elseif ($isTable): ?>
+          <?php $rows = array_map('trim', preg_split("/\r\n|\r|\n/", $text)); ?>
+          <table style="width:100%; border-collapse:collapse; font-family: Cambria, serif; font-size:12pt;">
+            <?php foreach ($rows as $r): ?>
+              <?php if ($r === '') continue; $cols = array_map('trim', explode('|', $r)); ?>
+              <tr>
+                <?php foreach ($cols as $c): ?>
+                  <td style="border:1px solid #777; padding:6px;"><?= htmlspecialchars($c) ?></td>
+                <?php endforeach; ?>
+              </tr>
+            <?php endforeach; ?>
+          </table>
+
+        <?php else: ?>
+          <div class="body"><?= nl2br(htmlspecialchars($text)) ?></div>
+        <?php endif; ?>
       <?php endif; ?>
-    <?php endif; ?>
-  </div>
-
-  <?php if ($after_break): ?>
-    <div class="page-break"></div>
-  <?php endif; ?>
-
+    </div>
+  </section>
 <?php endforeach; ?>
 
-</section>
-
-
-  {# Only print the ABOUT page (and the page-break before it) when the flag is true #}
+  <!-- ===== ABOUT PAGE (optional) ===== -->
   <?php if (!empty($proposal_data['include_about'])): ?>
-    <div class="page-break"></div>
 <section class="page about" style="font-family: Cambria, serif; padding: 20px 0 0 0;">
   <!-- Full-width green strip with black, underlined heading -->
   <div style="background:#c8dca4; width:100%; padding:6px 12px; box-sizing:border-box;">
@@ -275,15 +273,10 @@ Thanking you.
     <li style="padding-left:6px;">SLOG provide technical training program, Personality development program, Corporate trainings, Student development programs in more than 100+ latest trending technologies.</li>
   </ul>
 </section>
-
-
   <?php endif; ?>
 
-  {# Only print the TECHNOLOGIES page (and the page-break before it) when the flag is true #}
+  <!-- ===== TECHNOLOGIES PAGE (optional) ===== -->
   <?php if (!empty($proposal_data['include_technologies'])): ?>
-    <div class="page-break"></div>
-
-    <!-- ===== NEW TECHNOLOGIES PAGE (LAST PAGE) ===== -->
     <section class="page technologies" style="padding: 18px 28px; font-family: Cambria, serif;">
       <!-- Yellow strip title -->
       <div style="background:#ffd800; padding:10px 8px; text-align:center; font-weight:800; font-size:14pt; margin-bottom:12px; font-family: Cambria, serif;">
@@ -299,8 +292,6 @@ Thanking you.
             <th style="border:1px solid #777; padding:8px; font-weight:800; background:#f2f2f2; text-align:left; width:33%; font-family: Cambria, serif; font-size: 14pt;">ADVANCE TECHNOLOGIES</th>
             <th style="border:1px solid #777; padding:8px; font-weight:800; background:#f2f2f2; text-align:left; width:33%; font-family: Cambria, serif; font-size:14pt;">
   LATEST TRENDING<br>TECHNOLOGIES</th>
-
-
           </tr>
         </thead>
         <tbody>
@@ -353,7 +344,6 @@ Thanking you.
             </td>
 
             <td style="vertical-align:top; border:1px solid #777; padding:10px; font-family: Cambria, serif; width:33%; word-wrap:break-word;">
-
               <ul style="margin:0; padding-left:18px; font-size:12pt; line-height:1.45; font-family: Cambria, serif;">
                 <li>Drone Technology</li>
                 <li>Python</li>
