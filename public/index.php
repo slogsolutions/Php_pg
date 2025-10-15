@@ -7,7 +7,8 @@ ob_start();                       // buffer output to protect headers
 
 require_once __DIR__ . '/../src/Controller.php';
 require_once __DIR__ . '/../vendor/autoload.php';
-
+require_once __DIR__ . '/../src/auth.php';
+require_login();
 // Read from either GET or POST so forms work.
 $action = $_REQUEST['action'] ?? 'list';
 $id = isset($_REQUEST['id']) ? intval($_REQUEST['id']) : null;

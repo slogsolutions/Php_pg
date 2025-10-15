@@ -1,12 +1,17 @@
 <?php include __DIR__ . '/_header.php'; ?>
 <link rel="stylesheet" href="/assets/app.css">
+<?php if (function_exists('current_user') && is_logged_in()): ?>
+<nav style="display:flex;justify-content:flex-end;gap:12px;padding:10px 14px;background:#0b1220;">
+  <div style="margin-right:auto;color:#e5e7eb;">👋 <?= htmlspecialchars(current_user()['username'] ?? '') ?></div>
+  <a href="/index.php" style="color:#e5e7eb;text-decoration:none;">Home</a>
+  <a href="/logout.php" style="color:#fca5a5;text-decoration:none;">Sign out</a>
+</nav>
+<?php endif; ?>
 
 <div class="container">
   <div class="headerbar">
     <div class="logo">Proposal Editor</div>
-    <div class="small">
-      Cover & Introduction is added by default. Add pages, tables, and course content blocks.
-    </div>
+    
   </div>
 
   <form id="editor-form" action="index.php" method="post">

@@ -18,9 +18,24 @@ function route_delete($id) {
 }
 
 function route_list() {
-    $proposals = proposal_all();
+    // Read filters from GET
+    $filters = [
+        'q'           => $_GET['q']           ?? '',
+        'date_filter' => $_GET['date_filter'] ?? 'all', // all|yesterday|on|month|range
+        'date'        => $_GET['date']        ?? '',    // YYYY-MM-DD
+        'month'       => $_GET['month']       ?? '',    // YYYY-MM
+        'from'        => $_GET['from']        ?? '',    // YYYY-MM-DD
+        'to'          => $_GET['to']          ?? '',    // YYYY-MM-DD
+    ];
+
+    $proposals = proposal_search($filters);
+
+    // pass filters to view so inputs can stay filled
+    $view = $filters;
+
     include __DIR__ . '/../templates/list.php';
 }
+
 
 function route_new_form($errors = [], $old = []) {
     $section_count = _section_count_from_request(10);

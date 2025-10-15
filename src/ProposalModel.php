@@ -104,5 +104,47 @@ function proposal_delete($id) {
         throw $e;
     }
 }
+function proposal_search(array $opts = []) {
+    $pdo = db();
+
+    $q           = trim($opts['q'] ?? '');
+    $dateFilter  = $opts['date_filter'] ?? 'all';  // all|yesterday|on|month|range
+    $dateOn      = trim($opts['date'] ?? '');      // YYYY-MM-DD
+    $month       = trim($opts['month'] ?? '');     // YYYY-MM
+    $from        = trim($opts['from'] ?? '');      // YYYY-MM-DD
+    $to          = trim($opts['to'] ?? '');        // YYYY-MM-DD
+
+    $sql = "SELECT * FROM proposals WHERE 1=1";
+    $params = [];
+
+    // text search: title, for_whom, recipient, intro_text
+    if ($q !== '') {
+        $sql .= " AND (title LIKE ? OR for_whom LIKE ? OR recipient LIKE ? OR intro_text LIKE ?)";
+        $like = '%' . $q . '%';
+        array_push($params, $like, $like, $like, $like);
+    }
+
+    // date filters
+    if ($dateFilter === 'yesterday') {
+        $sql .= " AND DATE(`date`) = DATE(DATE_SUB(CURDATE(), INTERVAL 1 DAY))";
+    } elseif ($dateFilter === 'on' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateOn)) {
+        $sql .= " AND DATE(`date`) = ?";
+        $params[] = $dateOn;
+    } elseif ($dateFilter === 'month' && preg_match('/^\d{4}-\d{2}$/', $month)) {
+        // first and last day of that month
+        $sql .= " AND DATE(`date`) >= ? AND DATE(`date`) < DATE_ADD(DATE(CONCAT(?, '-01')), INTERVAL 1 MONTH)";
+        array_push($params, $month . '-01', $month);
+    } elseif ($dateFilter === 'range' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $from) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
+        $sql .= " AND DATE(`date`) BETWEEN ? AND ?";
+        array_push($params, $from, $to);
+    }
+    // else 'all' -> no constraint
+
+    $sql .= " ORDER BY id DESC";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
 
 ?>
