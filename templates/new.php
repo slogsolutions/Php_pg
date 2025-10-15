@@ -107,7 +107,6 @@ $default_intro = "Respected Sir/Ma'am,\n"
         <div class="controls">
           <button class="btn" type="button" id="add-page" style="display:none">+ Add Page</button>
           <button class="btn" type="button" id="add-table">+ Add Table</button>
-          <button class="btn" type="button" id="add-course-details">+ Add Course Details</button>
           <button class="btn" type="button" id="add-content">+ Add Course Content</button>
         </div>
 

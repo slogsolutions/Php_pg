@@ -15,29 +15,14 @@ $asset = function (string $rel) use ($publicRoot): string {
 <head>
   <meta charset="utf-8">
   <title><?= htmlspecialchars($proposal_data["title"]) ?></title>
-
-  <base href="<?= 'file://' . $publicRoot . '/' ?>">
-
   <link rel="stylesheet" href="<?= $asset('assets/pdf.css') ?>">
-
-<style>
-    @page { size: A4; margin: 0; }
-    html, body { margin: 0; padding: 0; }
-    /* Keep cover content on the same page; push date to the bottom */
-    .cover .cover-inner {
-      min-height: 100vh; /* Use min-height 100vh (Dompdf uses this for 100%) */
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    /* Enforce a page break before the Introduction and all subsequent dynamic sections */
-    .page-break-before { page-break-before: always; }
-  </style>
 </head>
 <body>
 
+  <!-- ===== COVER PAGE ===== -->
   <section class="page cover">
     <div class="cover-inner">
+      <!-- Header/title block -->
       <header class="cover-header">
         <div class="title-block">
           <div class="line1">PROPOSAL ON</div>
@@ -49,30 +34,27 @@ $asset = function (string $rel) use ($publicRoot): string {
           <div class="db-small"><strong>Delivered by</strong></div>
           <div class="db-company"><strong>SLOG SOLUTIONS PRIVATE LIMITED</strong></div>
         </div>
-
         <div class="top-strip">
           <img src="<?= $asset('assets/strip.png') ?>" alt="top strip" class="strip-top"/>
         </div>
       </header>
-
       <div class="banner-wrap">
         <img src="<?= $asset('assets/banner.png') ?>" alt="banner" class="banner"/>
       </div>
-
       <div class="bottom-strip">
         <img src="<?= $asset('assets/strip2.jpg') ?>" alt="bottom strip" class="strip-bottom"/>
       </div>
-
       <footer class="cover-footer">
         <div class="footer-left">SLOG- A MSME CERTIFIED ENTERPRISES</div>
-        <div class="footer-right" style="font-size: 11pt; font-weight: 600; margin-right: 10px;">
-          DATE: <?= htmlspecialchars($proposal_data["date"]) ?>
-        </div>
+        <div class="footer-right">DATE: <?= htmlspecialchars($proposal_data["date"]) ?></div>
       </footer>
     </div>
   </section>
 
-  <section class="page content page-break-before">
+  <div class="page-break"></div>
+
+  <!-- ===== Content pages: intro ===== -->
+  <section class="page content">
     <div class="content-header">
       <div class="content-title">
         PROPOSAL FOR <?= htmlspecialchars($proposal_data["title"]) ?>
@@ -109,200 +91,178 @@ Thanking you.
 <?php endif; ?>
     </p>
 
-    <div class="signature" style="font-family: Cambria, serif; font-size: 12pt;">
-      <p style="margin: 0; margin-top: 5px; line-height: 1.4; font-weight: normal;">
+    <div class="signature">
+      <p>
         <strong><?= htmlspecialchars($proposal_data["signatory_name"]) ?></strong><br/>
         <strong><?= htmlspecialchars($proposal_data["signatory_title"]) ?></strong><br/>
-        <strong></strong><br/>
         Mob: <?= htmlspecialchars($proposal_data["signatory_phone"]) ?><br/>
-        Email: <a href="mailto:<?= htmlspecialchars($proposal_data["signatory_email"]) ?>" style="font-weight: 700; color: #0000FF; text-decoration: underline;"><?= htmlspecialchars($proposal_data["signatory_email"]) ?></a><br/>
+        Email: <a href="mailto:<?= htmlspecialchars($proposal_data["signatory_email"]) ?>"><?= htmlspecialchars($proposal_data["signatory_email"]) ?></a><br/>
         slog.doon@gmail.com
       </p>
     </div>
   </section>
 
-  <?php
-/** We output ONE .page section per item to ensure:
- * - a new page before each content section (using page-break-before)
- * - no extra blank page after the last one (handled by .page:last-of-type in pdf.css)
- */
-foreach ($proposal_items as $it):
-    $label    = trim((string)($it['label'] ?? ''));
-    $rawBody  = $it['body'] ?? '';
-    $body     = is_array($rawBody) ? $rawBody
-              : (is_string($rawBody) ? json_decode($rawBody, true) : null);
-    if (is_null($body) && is_string($rawBody)) $body = $rawBody;
+  <div class="page-break"></div>
 
-    // [[PAGEBREAK]] marker is no longer needed (each item is its own page), so ignore it
-    if (is_string($body) && strpos($body, '[[PAGEBREAK]]') !== false) {
-      $body = str_replace('[[PAGEBREAK]]', '', $body);
+  <!-- ===== DYNAMIC CONTENT PAGES ===== -->
+  <section class="page program-structure">
+    <?php 
+    // Group items by page
+    $currentPageItems = [];
+    foreach ($proposal_items as $item) {
+        if (($item['type'] ?? 'content') === 'page') {
+            // Render previous page items if any
+            if (!empty($currentPageItems)) {
+                echo renderPageItems($currentPageItems);
+                echo '<div class="page-break"></div>';
+            }
+            $currentPageItems = [];
+            // Start new page with title
+            echo '<div class="page-title">' . htmlspecialchars($item['label'] ?? 'Untitled Page') . '</div>';
+        } else {
+            $currentPageItems[] = $item;
+        }
     }
-    $kind = is_array($body) ? ($body['__kind'] ?? 'content') : null;
-?>
-  <section class="page program-structure page-break-before" style="padding:20px 30px; font-family: Cambria, serif; font-size: 12pt;">
-    <div class="section">
-      <div class="page-title">
-        <?= htmlspecialchars($label ?: 'Section') ?>
-      </div>
-
-      <?php if ($kind === 'page'): ?>
-        <h2><?= htmlspecialchars($body['title'] ?? $label ?: 'Page') ?></h2>
-
-      <?php elseif ($kind === 'table' || $kind === 'key_value_table'): // Use the unified structured table format ?>
-        <h3><?= htmlspecialchars($body['title'] ?? $label ?: 'Table') ?></h3>
-        <?php
-            $cols = $body['columns'] ?? [];
-            $rows = $body['rows'] ?? [];
-        ?>
-
-        <?php if (!empty($rows)): ?>
-            <table class="proposal-table" style="width:100%; border-collapse:collapse; font-family: Cambria, serif; font-size:12pt; margin-top:10px;">
-                <?php if ($kind === 'table'): // Show headers for generic table ?>
-                <thead>
-                    <tr>
-                        <?php foreach ($cols as $c): ?>
-                            <th style="border:1px solid #777; padding:8px; text-align:left; font-weight:700; background:#e7f3d9;"><?= htmlspecialchars((string)$c) ?></th>
-                        <?php endforeach; ?>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($rows as $r): ?>
-                        <tr>
-                            <?php foreach ($r as $c): ?>
-                                <td style="border:1px solid #777; padding:8px; vertical-align:top; word-wrap:break-word;"><?= nl2br(htmlspecialchars((string)$c)) ?></td>
-                            <?php endforeach; ?>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-
-                <?php elseif ($kind === 'key_value_table' && count($cols) === 2 && ($cols[0] === 'label' || $cols[0] === 'Label')): // 2-column key-value table ?>
-                <tbody>
-                    <?php foreach ($rows as $r): ?>
-                        <?php if (!empty($r[0]) || !empty($r[1])): ?>
-                        <tr>
-                            <td style="width: 30%; font-weight: 700; white-space: nowrap; text-align: left; border: 1px solid #777; padding: 8px; vertical-align: top; font-size: 12pt;"><?= htmlspecialchars((string)$r[0]) ?></td>
-                            <td style="width: 70%; white-space: normal; border: 1px solid #777; padding: 8px; vertical-align: top; font-size: 12pt;"><?= nl2br(htmlspecialchars((string)$r[1])) ?></td>
-                        </tr>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </tbody>
-                <?php endif; ?>
-            </table>
-        <?php endif; ?>
-
-
-      <?php elseif ($kind === 'content'): ?>
-        <?php
-          $subTitle = trim((string)($body['subTitle'] ?? $label ?: 'Course Content'));
-          $richText = (string)($body['richText'] ?? '');
-        ?>
-        <?php if ($subTitle !== ''): ?>
-          <h4><?= htmlspecialchars($subTitle) ?></h4>
-        <?php endif; ?>
-        <div class="body"><?= nl2br(htmlspecialchars($richText)) ?></div>
-
-      <?php else: /* Legacy plain-text mode */ ?>
-        <?php
-          $text    = trim((string)$body);
-          $isCourse= stripos($label, 'COURSE:') === 0;
-          $isTable = stripos($label, 'TABLE:') === 0;
-        ?>
-
-        <?php if ($isCourse): ?>
-          <?php $lines = array_filter(array_map('trim', preg_split("/\r\n|\r|\n/", $text))); ?>
-          <?php if (!empty($lines)): ?>
-            <ul style="margin:6px 0 14px; font-size:12pt; line-height:1.5; padding-left:20px; list-style-type: disc; font-family: Cambria, serif;">
-              <?php foreach ($lines as $ln): ?>
-                <li><?= htmlspecialchars($ln) ?></li>
-              <?php endforeach; ?>
-            </ul>
-          <?php else: ?>
-            <div style="white-space:pre-line; font-size:12pt; line-height:1.5; font-family: Cambria, serif;">
-              <?= nl2br(htmlspecialchars($text)) ?>
-            </div>
-          <?php endif; ?>
-
-        <?php elseif ($isTable): ?>
-          <?php $rows = array_map('trim', preg_split("/\r\n|\r|\n/", $text)); ?>
-          <table style="width:100%; border-collapse:collapse; font-family: Cambria, serif; font-size:12pt;">
-            <?php foreach ($rows as $r): ?>
-              <?php if ($r === '') continue; $cols = array_map('trim', explode('|', $r)); ?>
-              <tr>
-                <?php foreach ($cols as $c): ?>
-                  <td style="border:1px solid #777; padding:6px;"><?= htmlspecialchars($c) ?></td>
-                <?php endforeach; ?>
-              </tr>
-            <?php endforeach; ?>
-          </table>
-
-        <?php else: ?>
-          <div class="body"><?= nl2br(htmlspecialchars($text)) ?></div>
-        <?php endif; ?>
-      <?php endif; ?>
-    </div>
+    // Render remaining items
+    if (!empty($currentPageItems)) {
+        echo renderPageItems($currentPageItems);
+    }
+    
+    function renderPageItems($items) {
+        $output = '';
+        foreach ($items as $item) {
+            $label = trim((string)($item['label'] ?? ''));
+            $rawBody = $item['body'] ?? '';
+            $body = is_array($rawBody) ? $rawBody : (is_string($rawBody) ? json_decode($rawBody, true) : null);
+            if (is_null($body) && is_string($rawBody)) $body = $rawBody;
+            $kind = is_array($body) ? ($body['__kind'] ?? 'content') : null;
+            
+            if ($kind === 'table' || $kind === 'key_value_table') {
+                $output .= renderTable($body, $label);
+            } elseif ($kind === 'content' || $kind === 'legacy') {
+                $output .= renderContent($body, $label);
+            }
+        }
+        return $output;
+    }
+    
+    function renderTable($body, $label) {
+        $cols = $body['columns'] ?? [];
+        $rows = $body['rows'] ?? [];
+        $title = $body['title'] ?? $label ?: 'Table';
+        
+        $output = '';
+        if (!empty($title)) {
+            $output .= '<h3>' . htmlspecialchars($title) . '</h3>';
+        }
+        
+        if (!empty($rows)) {
+            $output .= '<table class="proposal-table">';
+            
+            if (count($cols) !== 2) {
+                $output .= '<thead><tr>';
+                foreach ($cols as $c) {
+                    $output .= '<th>' . htmlspecialchars((string)$c) . '</th>';
+                }
+                $output .= '</tr></thead><tbody>';
+                foreach ($rows as $r) {
+                    $output .= '<tr>';
+                    foreach ($r as $c) {
+                        $output .= '<td>' . nl2br(htmlspecialchars((string)$c)) . '</td>';
+                    }
+                    $output .= '</tr>';
+                }
+                $output .= '</tbody>';
+            } else {
+                $output .= '<tbody>';
+                foreach ($rows as $r) {
+                    if (!empty($r[0]) || !empty($r[1])) {
+                        $output .= '<tr>';
+                        $output .= '<td>' . htmlspecialchars((string)$r[0]) . '</td>';
+                        $output .= '<td>' . nl2br(htmlspecialchars((string)$r[1])) . '</td>';
+                        $output .= '</tr>';
+                    }
+                }
+                $output .= '</tbody>';
+            }
+            $output .= '</table>';
+        }
+        return $output;
+    }
+    
+    function renderContent($body, $label) {
+        $subTitle = trim((string)($body['subTitle'] ?? $label ?: 'Course Content'));
+        $richText = (string)($body['richText'] ?? '');
+        
+        $output = '';
+        if ($subTitle !== '') {
+            $output .= '<h4>' . htmlspecialchars($subTitle) . '</h4>';
+        }
+        
+        // Convert text to bullet points like Django version
+        $lines = array_filter(array_map('trim', explode("\n", $richText)));
+        if (count($lines) > 1) {
+            $output .= '<ul>';
+            foreach ($lines as $line) {
+                if (!empty(trim($line))) {
+                    $output .= '<li>' . htmlspecialchars($line) . '</li>';
+                }
+            }
+            $output .= '</ul>';
+        } else {
+            $output .= '<div class="content-text">' . nl2br(htmlspecialchars($richText)) . '</div>';
+        }
+        
+        return $output;
+    }
+    ?>
   </section>
-<?php endforeach; ?>
 
   <?php if (!empty($proposal_data['include_about'])): ?>
-<section class="page about page-break-before" style="font-family: Cambria, serif; padding: 20px 0 0 0;">
-  <div style="background:#c8dca4; width:100%; padding:6px 12px; box-sizing:border-box;">
-    <span style="font-size:14pt; font-weight:700; color:#000; text-decoration:underline;">
-      ABOUT SLOG SOLUTIONS PVT. LTD.
-    </span>
-  </div>
-
-  <ul style="
-      list-style-position: outside;
-      margin: 20px 16px 0 0;     /* top gap + small right margin */
-      padding-left: 18px;        /* keeps bullets visible while flush-left */
-      font-size: 12pt;
-      line-height: 1.55;         /* little spacing between lines */
-      color:#000;">
-    <li style="padding-left:6px;">SLOG Solutions Pvt. Ltd. is incorporated on September 2018 having 7+ year of experience in services.</li>
-    <li style="padding-left:6px;">SLOG is an ISO 9001 : 2015 certified Company</li>
-    <li style="padding-left:6px;">SLOG is a MSME Certified Organization</li>
-    <li style="padding-left:6px;">SLOG is approved by Ministry of Corporate Affairs, Government of India</li>
-    <li style="padding-left:6px;">SLOG provides Technical Training program, corporate training programs, Faculty development program, Capacity building program, Outbound Training Program.</li>
-    <li style="padding-left:6px;">SLOG is recognized by Start-up India.</li>
-    <li style="padding-left:6px;">SLOG is Collaborated with E&amp;ICT Academy IIT Roorkee For Corporate Trainings</li>
-    <li style="padding-left:6px;">SLOG is collaborated with IIT Roorkee Alumni Association DC</li>
-    <li style="padding-left:6px;">SLOG is also collaborated with 100 year old Institution of Engineering, India.</li>
-    <li style="padding-left:6px;">SLOG is Certiport Authorized Testing Centre (CATC) for BRAND CERTIFICATION of
-      <span style="color:red; font-weight:600;">Autodesk, QuickBooks, Microsoft, Apple and Adobe.</span>
-    </li>
-    <li style="padding-left:6px;">SLOG Deliver more than
-      <span style="color:red; font-weight:600;">70 + Technical programs to Ministry of Defense (Indian Army, Indian Navy)</span>
-      in <span style="color:red; font-weight:600;">PAN India</span> Includes: Southern Command (Pune), Western Command (Chandigarh), MCEME Schendrabad, Jammu &amp; Kashmir, Assam, Telangana, Amritsar, Dehradun, Haridwar, Bangalore, Schendrabad and many more.
-    </li>
-    <li style="padding-left:6px;">SLOG Deliver more than 200+ Corporate / Professional Trainings / Faculty development programs include organizations like DRDO, ORDNANCE (OFIL), KV faculties, UBTER, UTU, World Bank projects and many more.</li>
-    <li style="padding-left:6px;">SLOG Deliver more than 800+ Student Development program, benefited more than 30,000 students.</li>
-    <li style="padding-left:6px;">SLOG deliver Virtual training program in online mode to 15,000+ polytechnic students at a time.</li>
-    <li style="padding-left:6px;">SLOG has a group of 100+ Industry Experts and collaborated with IIT Roorkee Alumni Association DC for Expert Guest Lecture by <span style="color:red; font-weight:600;">IITians</span></li>
-    <li style="padding-left:6px;">SLOG provide technical training program, Personality development program, Corporate trainings, Student development programs in more than 100+ latest trending technologies.</li>
-  </ul>
-</section>
+    <div class="page-break"></div>
+    <section class="page about">
+      <div class="about-header">
+        ABOUT SLOG SOLUTIONS PVT. LTD.
+      </div>
+      <ul class="about-list">
+        <li>SLOG Solutions Pvt. Ltd. is incorporated on September 2018 having 7+ year of experience in services.</li>
+        <li>SLOG is an ISO 9001 : 2015 certified Company</li>
+        <li>SLOG is a MSME Certified Organization</li>
+        <li>SLOG is approved by Ministry of Corporate Affairs, Government of India</li>
+        <li>SLOG provides Technical Training program, corporate training programs, Faculty development program, Capacity building program, Outbound Training Program.</li>
+        <li>SLOG is recognized by Start-up India.</li>
+        <li>SLOG is Collaborated with E&amp;ICT Academy IIT Roorkee For Corporate Trainings</li>
+        <li>SLOG is collaborated with IIT Roorkee Alumni Association DC</li>
+        <li>SLOG is also collaborated with 100 year old Institution of Engineering, India.</li>
+        <li>SLOG is Certiport Authorized Testing Centre (CATC) for BRAND CERTIFICATION of <span class="highlight-red">Autodesk, QuickBooks, Microsoft, Apple and Adobe.</span></li>
+        <li>SLOG Deliver more than <span class="highlight-red">70 + Technical programs to Ministry of Defense (Indian Army, Indian Navy)</span> in <span class="highlight-red">PAN India</span> Includes: Southern Command (Pune), Western Command (Chandigarh), MCEME Schendrabad, Jammu &amp; Kashmir, Assam, Telangana, Amritsar, Dehradun, Haridwar, Bangalore, Schendrabad and many more.</li>
+        <li>SLOG Deliver more than 200+ Corporate / Professional Trainings / Faculty development programs include organizations like DRDO, ORDNANCE (OFIL), KV faculties, UBTER, UTU, World Bank projects and many more.</li>
+        <li>SLOG Deliver more than 800+ Student Development program, benefited more than 30,000 students.</li>
+        <li>SLOG deliver Virtual training program in online mode to 15,000+ polytechnic students at a time.</li>
+        <li>SLOG has a group of 100+ Industry Experts and collaborated with IIT Roorkee Alumni Association DC for Expert Guest Lecture by <span class="highlight-red">IITians</span></li>
+        <li>SLOG provide technical training program, Personality development program, Corporate trainings, Student development programs in more than 100+ latest trending technologies.</li>
+      </ul>
+    </section>
   <?php endif; ?>
 
   <?php if (!empty($proposal_data['include_technologies'])): ?>
-    <section class="page technologies page-break-before" style="padding: 18px 28px; font-family: Cambria, serif;">
-      <div style="background:#ffd800; padding:10px 8px; text-align:center; font-weight:800; font-size:14pt; margin-bottom:12px; font-family: Cambria, serif;">
+    <div class="page-break"></div>
+    <section class="page technologies">
+      <div class="technologies-title">
         TECHNOLOGIES OFFERED BY SLOG SOLUTIONS PVT. LTD.
       </div>
-
-      <table style="width:90%; margin:0 auto; border-collapse:collapse; table-layout:fixed; font-family: Cambria, serif;">
-
+      <table class="technologies-table">
         <thead>
           <tr>
-            <th style="border:1px solid #777; padding:8px; font-weight:800; background:#f2f2f2; text-align:left; width:33%; font-family: Cambria, serif; font-size: 14pt;">BASIC TECHNOLOGIES</th>
-            <th style="border:1px solid #777; padding:8px; font-weight:800; background:#f2f2f2; text-align:left; width:33%; font-family: Cambria, serif; font-size: 14pt;">ADVANCE TECHNOLOGIES</th>
-            <th style="border:1px solid #777; padding:8px; font-weight:800; background:#f2f2f2; text-align:left; width:33%; font-family: Cambria, serif; font-size:14pt;">
-  LATEST TRENDING<br>TECHNOLOGIES</th>
+            <th>BASIC TECHNOLOGIES</th>
+            <th>ADVANCE TECHNOLOGIES</th>
+            <th>LATEST TRENDING TECHNOLOGIES</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style="vertical-align:top; border:1px solid #777; padding:10px; font-family: Cambria, serif;">
-              <ul style="margin:0; padding-left:18px; font-size:12pt; line-height:1.45; font-family: Cambria, serif;">
+            <td>
+              <ul>
                 <li>AutoCAD</li>
                 <li>BIM</li>
                 <li>Advance Excel</li>
@@ -321,9 +281,8 @@ foreach ($proposal_items as $it):
                 <li>2D Designing</li>
               </ul>
             </td>
-
-            <td style="vertical-align:top; border:1px solid #777; padding:10px; font-family: Cambria, serif;">
-              <ul style="margin:0; padding-left:18px; font-size:12pt; line-height:1.45; font-family: Cambria, serif;">
+            <td>
+              <ul>
                 <li>Home Automation using IoT</li>
                 <li>CCNP</li>
                 <li>Internet of Things (IoT)</li>
@@ -347,9 +306,8 @@ foreach ($proposal_items as $it):
                 <li>Tally 9.0</li>
               </ul>
             </td>
-
-            <td style="vertical-align:top; border:1px solid #777; padding:10px; font-family: Cambria, serif; width:33%; word-wrap:break-word;">
-              <ul style="margin:0; padding-left:18px; font-size:12pt; line-height:1.45; font-family: Cambria, serif;">
+            <td>
+              <ul>
                 <li>Drone Technology</li>
                 <li>Python</li>
                 <li>Machine Learning</li>

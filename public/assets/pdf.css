@@ -1,34 +1,8 @@
-@page { size: A4; margin: 0; }
-/* === Cambria embedding (must come first) === */
-@font-face {
-  font-family: 'Cambria';
-  src: url('E:\FINAL YEAR PROJECTS\Php_pg-main\public\assets\fonts\cambria.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
+@page { 
+  size: A4; 
+  margin: 10mm 20px; 
 }
-@font-face {
-  font-family: 'Cambria';
-  src: url('E:\FINAL YEAR PROJECTS\Php_pg-main\public\assets\fonts\CAMBRIAB.TTF') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'Cambria';
-  src: url('E:\FINAL YEAR PROJECTS\Php_pg-main\public\assets\fonts\cambriai.ttf') format('truetype');
-  font-weight: 400;
-  font-style: italic;
-}
-@font-face {
-  font-family: 'Cambria';
-  src: url('E:\FINAL YEAR PROJECTS\Php_pg-main\public\assets\fonts\cambriaz.ttf') format('truetype');
-  font-weight: 700;
-  font-style: italic;
-}
-/* Force Cambria globally */
-html, body, .page, * {
-  font-family: 'Cambria' !important;
-}
-html, body { margin: 0; padding: 0; }
+
 body { 
   font-family: Cambria, serif; 
   color: #222; 
@@ -37,23 +11,19 @@ body {
 }
 
 /* Each printable page container */
-.page {
-  box-sizing: border-box;
-  width: 210mm;
-  height: 297mm;
-  padding: 18mm;        /* adjust to match proposal_24 visuals */
-  page-break-after: always;
+.page { 
+  width: 100%; 
+  position: relative; 
+  box-sizing: border-box; 
+  min-height: 297mm;
+  font-family: Cambria, serif;
 }
 
-/* Do NOT add a blank page after the last section */
-.page:last-of-type { page-break-after: auto; }
-
-/* Utility when you must start a new page BEFORE a block */
-.page-break { page-break-before: always; }
-
-/* Helps Dompdf avoid injecting a blank page for tiny overflows */
-.avoid-break-after { page-break-after: avoid; }
-.avoid-break-inside { page-break-inside: avoid; }
+/* Force page break element */
+.page-break { 
+  page-break-after: always; 
+  break-after: page;
+}
 
 /* COVER container */
 .cover-inner {
@@ -66,13 +36,6 @@ body {
   box-sizing: border-box;
   font-family: Cambria, serif;
 }
-.cover .cover-inner {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* pushes date to the bottom but inside the same page */
-}
-.cover .date { margin-top: 12mm; }
 
 /* Title area */
 .title-block { 
@@ -105,7 +68,7 @@ body {
   font-family: Cambria, serif;
 }
 
-/* The red, thick underline style requested */
+/* The red, thick underline style */
 .program-underline {
   color: #c42020;
   text-decoration: underline;
@@ -141,12 +104,14 @@ body {
   margin-bottom: 20px;
   font-family: Cambria, serif;
 }
+
 .delivered-by .db-small { 
   font-size: 22pt; 
   color: #111; 
   margin-bottom: 5px;
   font-family: Cambria, serif;
 }
+
 .delivered-by .db-company { 
   font-weight: 900; 
   font-size: 22pt; 
@@ -161,6 +126,7 @@ body {
   margin-top: 15px;
   margin-bottom: 20px;
 }
+
 .strip-top {
   width: 100%;
   height: auto;
@@ -175,11 +141,11 @@ body {
   margin-top: 15px;
   margin-bottom: 20px;
 }
+
 .banner-wrap .banner {
- max-width: 100%;
+  max-width: 100%;
   height: auto;
   display: block;
-  
   margin: 0 auto;
 }
 
@@ -189,8 +155,8 @@ body {
   text-align: center;
   margin-top: 15px;
   margin-bottom: 15px;
-  margin-right: 15px;
 }
+
 .strip-bottom {
   width: 100%;
   height: auto;
@@ -209,15 +175,16 @@ body {
   color: #222;
   font-family: Cambria, serif;
 }
+
 .footer-left {
   font-size: 11pt;
   font-weight: 600;
   font-family: Cambria, serif;
 }
-.foooter-right {
+
+.footer-right {
   font-size: 11pt;
   font-weight: 600;
-  margin-right: 10px;
   font-family: Cambria, serif;
 }
 
@@ -275,18 +242,6 @@ body {
   font-family: Cambria, serif;
 }
 
-.meta { 
-  font-size: 12pt; 
-  color: #444; 
-  margin-bottom: 10px; 
-  font-family: Cambria, serif;
-}
-
-.signature { 
-  margin-top: 30px; 
-  font-family: Cambria, serif;
-}
-
 /* INTRODUCTION label (green strip) */
 .intro-title {
   display: block; 
@@ -297,6 +252,24 @@ body {
   margin-bottom: 12px;
   font-size: 12pt;
   border-bottom: 2px solid #000;
+  font-family: Cambria, serif;
+}
+
+.intro-body {
+  margin-top: 12px;
+  font-size: 12pt;
+  line-height: 1.4;
+  font-family: Cambria, serif;
+}
+
+.signature { 
+  margin-top: 30px; 
+  font-family: Cambria, serif;
+}
+
+.signature p { 
+  margin: 0; 
+  font-size: 12pt; 
   font-family: Cambria, serif;
 }
 
@@ -313,7 +286,7 @@ body {
   font-family: Cambria, serif;
 }
 
-/* Table styles for dynamic blocks (rows only, no headers) */
+/* Table styles */
 .proposal-table { 
   width: 100%; 
   border-collapse: collapse; 
@@ -322,6 +295,7 @@ body {
   font-family: Cambria, serif;
 }
 
+.proposal-table th,
 .proposal-table td {
   border: 1px solid #777; 
   padding: 8px; 
@@ -332,73 +306,124 @@ body {
   font-family: Cambria, serif;
 }
 
+.proposal-table th {
+  font-weight: 700;
+  background: #e7f3d9;
+  text-align: left;
+}
+
 .proposal-table td:first-child {
   width: 30%;    
   font-weight: 700;
   white-space: nowrap;     
   text-align: left;        
-  font-family: Cambria, serif;
 }
 
 .proposal-table td:nth-child(n+2) {
   width: 70%;
   white-space: normal;
+}
+
+/* Content styles */
+.content-text {
+  white-space: pre-line;
+  font-size: 12pt;
+  line-height: 1.5;
   font-family: Cambria, serif;
 }
 
-.proposal-table, 
-.proposal-table tbody, 
-.proposal-table tr, 
-.proposal-table td {
-  page-break-inside: avoid;
-  break-inside: avoid;
+ul {
+  margin: 6px 0 14px;
+  font-size: 12pt;
+  line-height: 1.5;
+  padding-left: 20px;
+  list-style-type: disc;
   font-family: Cambria, serif;
 }
 
-/* About SLOG section */
-.about-title {
+/* About section */
+.about-header {
+  background: #c8dca4;
+  width: 100%;
+  padding: 6px 12px;
+  box-sizing: border-box;
   font-size: 14pt;
-  font-weight: 900;
+  font-weight: 700;
   color: #000;
   text-decoration: underline;
-  background-color: #d8e4bc;
-  padding: 6px 8px;
-  margin-bottom: 12px;
   font-family: Cambria, serif;
 }
 
 .about-list {
-  list-style-type: disc;
-  margin-left: 20px;
+  list-style-position: outside;
+  margin: 20px 16px 0 0;
+  padding-left: 18px;
   font-size: 12pt;
-  line-height: 1.4;
+  line-height: 1.55;
+  color: #000;
   font-family: Cambria, serif;
 }
+
 .about-list li {
+  padding-left: 6px;
   margin-bottom: 8px;
   font-family: Cambria, serif;
 }
-.about-list .highlight-red {
+
+.highlight-red {
   color: #c42020;
   font-weight: 600;
   font-family: Cambria, serif;
 }
 
-.intro-body {
-  margin-top: 12px;
+/* Technologies section */
+.technologies-title {
+  background: #ffd800;
+  padding: 10px 8px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 14pt;
+  margin-bottom: 12px;
+  font-family: Cambria, serif;
+}
+
+.technologies-table {
+  width: 90%;
+  margin: 0 auto;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-family: Cambria, serif;
+}
+
+.technologies-table th {
+  border: 1px solid #777;
+  padding: 8px;
+  font-weight: 800;
+  background: #f2f2f2;
+  text-align: left;
+  width: 33%;
+  font-family: Cambria, serif;
+  font-size: 14pt;
+}
+
+.technologies-table td {
+  vertical-align: top;
+  border: 1px solid #777;
+  padding: 10px;
+  font-family: Cambria, serif;
+}
+
+.technologies-table ul {
+  margin: 0;
+  padding-left: 18px;
   font-size: 12pt;
-  line-height: 1.25; /* Change from 1.4 to 1.25 for a neater look, matching proposal_24 */
+  line-height: 1.45;
   font-family: Cambria, serif;
 }
 
-/* Make sure signature shows both lines nicely */
-.signature p { 
-  margin: 0; 
-  font-size: 12pt4; 
-  font-family: Cambria, serif;
+.technologies-table li {
+  margin-bottom: 2px;
 }
-
-/* Certification partners */
 
 /* Print adjustments */
 @media print {

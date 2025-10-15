@@ -20,10 +20,9 @@
     try { itemsField.value = JSON.stringify(items); } catch (e) { /* noop */ }
   }
 
-  // Default: ONLY the Cover page (unless server seeded items)
-  let items = Array.isArray(window.__INITIAL_ITEMS__) && window.__INITIAL_ITEMS__.length
-    ? window.__INITIAL_ITEMS__
-    : [{ type: 'page', label: 'Cover & Introduction', body: { title: 'Cover & Introduction' } }];
+let items = Array.isArray(window.__INITIAL_ITEMS__) && window.__INITIAL_ITEMS__.length
+  ? window.__INITIAL_ITEMS__
+  : [{ type: 'page', label: 'Cover', body: { title: 'Cover' } }];
 
   let currentPageIndex = 0; // start at first page
 
