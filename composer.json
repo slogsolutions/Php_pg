@@ -1,0 +1,7 @@
+{
+  "name": "proposal/php-app",
+  "description": "Proposal generator in pure PHP + MySQL (no JS)",
+  "require": {
+    "dompdf/dompdf": "2.0"
+  }
+}
