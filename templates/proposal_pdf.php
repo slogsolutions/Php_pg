@@ -1,82 +1,80 @@
 <?php
-// Template expects $proposal_data and $proposal_items
-
-// Build a reliable file:// asset helper pointed at /public
 $publicRoot = realpath(__DIR__ . '/../public');
 if ($publicRoot === false) {
-  throw new RuntimeException('Public folder not found at ../public');
+    throw new RuntimeException('Public folder not found at ../public');
 }
 $asset = function (string $rel) use ($publicRoot): string {
-  return 'file://' . $publicRoot . '/' . ltrim($rel, '/');
+    return 'file://' . $publicRoot . '/' . ltrim($rel, '/');
 };
+// no closing PHP tag or whitespace before DOCTYPE
 ?>
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title><?= htmlspecialchars($proposal_data["title"]) ?></title>
-  <link rel="stylesheet" href="<?= $asset('assets/pdf.css') ?>">
+    <meta charset="utf-8">
+    <title><?= htmlspecialchars($proposal_data["title"]) ?></title>
+    <link rel="stylesheet" href="<?= $asset('assets/pdf.css') ?>">
 </head>
 <body>
 
-  <!-- ===== COVER PAGE ===== -->
-  <section class="page cover">
-    <div class="cover-inner">
-      <!-- Header/title block -->
-      <header class="cover-header">
-        <div class="title-block">
-          <div class="line1">PROPOSAL ON</div>
-          <div class="program program-underline"><?= htmlspecialchars($proposal_data["title"]) ?></div>
-          <div class="for-line">FOR</div>
-          <div class="for-where"><?= htmlspecialchars($proposal_data["for_whom"]) ?></div>
+    <!-- ===== COVER PAGE ===== -->
+    <section class="page cover">
+        <div class="cover-inner">
+            <!-- Header/title block -->
+            <header class="cover-header">
+                <div class="title-block">
+                    <div class="line1">PROPOSAL ON</div>
+                    <div class="program program-underline"><?= htmlspecialchars($proposal_data["title"]) ?></div>
+                    <div class="for-line">FOR</div>
+                    <div class="for-where"><?= htmlspecialchars($proposal_data["for_whom"]) ?></div>
+                </div>
+                <div class="delivered-by">
+                    <div class="db-small"><strong>Delivered by</strong></div>
+                    <div class="db-company"><strong>SLOG SOLUTIONS PRIVATE LIMITED</strong></div>
+                </div>
+                <div class="top-strip">
+                    <img src="<?= $asset('assets/strip.png') ?>" alt="top strip" class="strip-top"/>
+                </div>
+            </header>
+            <div class="banner-wrap">
+                <img src="<?= $asset('assets/banner.png') ?>" alt="banner" class="banner"/>
+            </div>
+            <div class="bottom-strip">
+                <img src="<?= $asset('assets/strip2.jpg') ?>" alt="bottom strip" class="strip-bottom"/>
+            </div>
+            <footer class="cover-footer">
+                <div class="footer-content">
+                    <span class="footer-left">SLOG- A MSME CERTIFIED ENTERPRISES</span>
+                    <span class="footer-right">DATE: <?= htmlspecialchars($proposal_data["date"]) ?></span>
+                </div>
+            </footer>
         </div>
-        <div class="delivered-by">
-          <div class="db-small"><strong>Delivered by</strong></div>
-          <div class="db-company"><strong>SLOG SOLUTIONS PRIVATE LIMITED</strong></div>
-        </div>
-        <div class="top-strip">
-          <img src="<?= $asset('assets/strip.png') ?>" alt="top strip" class="strip-top"/>
-        </div>
-      </header>
-      <div class="banner-wrap">
-        <img src="<?= $asset('assets/banner.png') ?>" alt="banner" class="banner"/>
-      </div>
-      <div class="bottom-strip">
-        <img src="<?= $asset('assets/strip2.jpg') ?>" alt="bottom strip" class="strip-bottom"/>
-      </div>
-      <footer class="cover-footer">
-        <div class="footer-content">
-          <span class="footer-left">SLOG- A MSME CERTIFIED ENTERPRISES</span>
-          <span class="footer-right">DATE: <?= htmlspecialchars($proposal_data["date"]) ?></span>
-        </div>
-      </footer>
-    </div>
-  </section>
+    </section>
 
-  <!-- ===== Content pages: intro ===== -->
-  <section class="page content">
-    <div class="content-header">
-      <div class="content-title">
-        PROPOSAL FOR <?= htmlspecialchars($proposal_data["title"]) ?>
-      </div>
-      <div class="content-subheader">
-        <div class="content-for">
-          FOR <?= htmlspecialchars($proposal_data["recipient"]) ?>
+    <!-- ===== Content pages: intro ===== -->
+    <section class="page content">
+        <div class="content-header">
+            <div class="content-title">
+                PROPOSAL FOR <?= htmlspecialchars($proposal_data["title"]) ?>
+            </div>
+            <div class="content-subheader">
+                <div class="content-for">
+                    FOR <?= htmlspecialchars($proposal_data["recipient"]) ?>
+                </div>
+                <div class="content-date">
+                    Date: <?= htmlspecialchars($proposal_data["date"]) ?>
+                </div>
+            </div>
+            <div class="content-by">
+                BY SLOG SOLUTIONS PVT. LTD.
+            </div>
         </div>
-        <div class="content-date">
-          Date: <?= htmlspecialchars($proposal_data["date"]) ?>
-        </div>
-      </div>
-      <div class="content-by">
-        BY SLOG SOLUTIONS PVT. LTD.
-      </div>
-    </div>
 
-    <h4 class="intro-title">
-      INTRODUCTION:
-    </h4>
+        <h4 class="intro-title">
+            INTRODUCTION:
+        </h4>
 
-    <p class="intro-body">
+        <p class="intro-body">
 <?php if (!empty($proposal_data["intro_text"])): ?>
 <?= nl2br(htmlspecialchars($proposal_data["intro_text"])) ?>
 <?php else: ?>
@@ -89,130 +87,121 @@ With reference to the same, SLOG wishes to conduct an IT Training Program for Ar
 We look forward to this mutually beneficial association and your kind cooperation in this endeavor. SLOG will be glad to receive your positive reply.<br><br>
 Thanking you.
 <?php endif; ?>
-    </p>
+        </p>
 
-    <div class="signature">
-      <p>
-        <strong><?= htmlspecialchars($proposal_data["signatory_name"]) ?></strong><br/>
-        <strong><?= htmlspecialchars($proposal_data["signatory_title"]) ?></strong><br/>
-        Mob: <?= htmlspecialchars($proposal_data["signatory_phone"]) ?><br/>
-        Email: <a href="mailto:<?= htmlspecialchars($proposal_data["signatory_email"]) ?>"><?= htmlspecialchars($proposal_data["signatory_email"]) ?></a><br/>
-        slog.doon@gmail.com
-      </p>
-    </div>
-  </section>
+        <div class="signature">
+            <p>
+                <strong><?= htmlspecialchars($proposal_data["signatory_name"]) ?></strong><br/>
+                <strong><?= htmlspecialchars($proposal_data["signatory_title"]) ?></strong><br/>
+                Mob: <?= htmlspecialchars($proposal_data["signatory_phone"]) ?><br/>
+                Email: <a href="mailto:<?= htmlspecialchars($proposal_data["signatory_email"]) ?>"><?= htmlspecialchars($proposal_data["signatory_email"]) ?></a><br/>
+                [slog.doon@gmail.com](mailto:slog.doon@gmail.com)
+            </p>
+        </div>
+    </section>
 
-  <!-- ===== DYNAMIC CONTENT PAGES ===== -->
-  <?php 
-  // Group items by page
-  $currentPageItems = [];
-  foreach ($proposal_items as $item) {
-      if (($item['type'] ?? 'content') === 'page') {
-          // Render previous page items if any
-          if (!empty($currentPageItems)) {
-              echo '<section class="page program-structure">';
-              echo renderPageItems($currentPageItems);
-              echo '</section>';
-          }
-          $currentPageItems = [];
-      } else {
-          $currentPageItems[] = $item;
-      }
-  }
-  // Render remaining items
-  if (!empty($currentPageItems)) {
-      echo '<section class="page program-structure">';
-      echo renderPageItems($currentPageItems);
-      echo '</section>';
-  }
-  
-  function renderPageItems($items) {
-      $output = '';
-      $hasPageTitle = false;
-      
-      foreach ($items as $item) {
-          $label = trim((string)($item['label'] ?? ''));
-          $rawBody = $item['body'] ?? '';
-          $body = is_array($rawBody) ? $rawBody : (is_string($rawBody) ? json_decode($rawBody, true) : null);
-          if (is_null($body) && is_string($rawBody)) $body = $rawBody;
-          $kind = is_array($body) ? ($body['__kind'] ?? 'content') : null;
-          
-          // Render page title if it exists and we haven't rendered one yet
-          if (!$hasPageTitle && !empty($label)) {
-              $unwantedTitles = ['Cover', 'AI', 'ML'];
-              if (!in_array($label, $unwantedTitles)) {
-                  $output .= '<div class="page-title">' . htmlspecialchars($label) . '</div>';
-                  $hasPageTitle = true;
-              }
-          }
-          
-          if ($kind === 'table' || $kind === 'key_value_table') {
-              $output .= renderTable($body, $label);
-          } elseif ($kind === 'content' || $kind === 'legacy') {
-              $output .= renderContent($body, $label);
-          }
-      }
-      return $output;
-  }
-  
-  function renderTable($body, $label) {
-      $cols = $body['columns'] ?? [];
-      $rows = $body['rows'] ?? [];
-      $title = $body['title'] ?? $label ?: 'Table';
-      
-      $output = '';
-      
-      if (!empty($rows)) {
-          $output .= '<table class="proposal-table">';
-          
-          // Add table caption for title with green background and border
-          if (!empty($title)) {
-              $output .= '<caption class="table-caption">' . htmlspecialchars($title) . '</caption>';
-          }
-          
-          if (count($cols) !== 2) {
-              $output .= '<thead><tr>';
-              foreach ($cols as $c) {
-                  $output .= '<th>' . htmlspecialchars((string)$c) . '</th>';
-              }
-              $output .= '</tr></thead><tbody>';
-              foreach ($rows as $r) {
-                  $output .= '<tr>';
-                  foreach ($r as $c) {
-                      $output .= '<td>' . nl2br(htmlspecialchars((string)$c)) . '</td>';
-                  }
-                  $output .= '</tr>';
-              }
-              $output .= '</tbody>';
-          } else {
-              $output .= '<tbody>';
-              foreach ($rows as $r) {
-                  if (!empty($r[0]) || !empty($r[1])) {
-                      $output .= '<tr>';
-                      $output .= '<td>' . htmlspecialchars((string)$r[0]) . '</td>';
-                      $output .= '<td>' . nl2br(htmlspecialchars((string)$r[1])) . '</td>';
-                      $output .= '</tr>';
-                  }
-              }
-              $output .= '</tbody>';
-          }
-          $output .= '</table>';
-      }
-      return $output;
-  }
-  
-  function renderContent($body, $label) {
+    <!-- ===== DYNAMIC CONTENT PAGES ===== -->
+<?php
+// Group items by page
+$currentPageItems = [];
+foreach ($proposal_items as $item) {
+    if (($item['type'] ?? 'content') === 'page') {
+        // Render previous page items if any
+        if (!empty($currentPageItems)) {
+            echo '<section class="page program-structure">';
+            echo renderPageItems($currentPageItems);
+            echo '</section>';
+        }
+        $currentPageItems = [];
+    } else {
+        $currentPageItems[] = $item;
+    }
+}
+// Render remaining items
+if (!empty($currentPageItems)) {
+    echo '<section class="page program-structure">';
+    echo renderPageItems($currentPageItems);
+    echo '</section>';
+}
+
+function renderPageItems($items) {
+    $output = '';
+    $hasPageTitle = false;
+
+    foreach ($items as $item) {
+        $label = trim((string)($item['label'] ?? ''));
+        $rawBody = $item['body'] ?? '';
+        $body = is_array($rawBody) ? $rawBody : (is_string($rawBody) ? json_decode($rawBody, true) : null);
+        if (is_null($body) && is_string($rawBody)) $body = $rawBody;
+        $kind = is_array($body) ? ($body['__kind'] ?? 'content') : null;
+
+        // Render page title if it exists and we haven't rendered one yet
+        if (!$hasPageTitle && !empty($label)) {
+            $unwantedTitles = ['Cover', 'AI', 'ML'];
+            if (!in_array($label, $unwantedTitles)) {
+                $output .= '<div class="page-title">' . htmlspecialchars($label) . '</div>';
+                $hasPageTitle = true;
+            }
+        }
+
+        if ($kind === 'table' || $kind === 'key_value_table') {
+            $output .= renderTable($body, $label);
+        } elseif ($kind === 'content' || $kind === 'legacy') {
+            $output .= renderContent($body, $label);
+        }
+    }
+    return $output;
+}
+
+function renderTable($body, $label) {
+    $cols  = $body['columns'] ?? [];
+    $rows  = $body['rows']    ?? [];
+    $title = $body['title']   ?? $label ?: 'Table';
+    if (empty($rows)) return '';
+
+    // Start table
+    $output  = '<table class="proposal-table">';
+    $colCount = max(count($cols), count($rows[0] ?? []));
+
+    // Title as header row spanning all columns
+    $output .= '<thead>';
+    $output .= '<tr class="table-title-row">';
+    $output .= '<th class="table-title" colspan="' . $colCount . '">'
+             . htmlspecialchars($title)
+             . '</th>';
+    if (!empty($cols)) {
+        $output .= '</tr><tr>';
+        foreach ($cols as $c) {
+            $output .= '<th>' . htmlspecialchars($c) . '</th>';
+        }
+    }
+    $output .= '</tr></thead><tbody>';
+
+    // Render rows
+    foreach ($rows as $r) {
+        $output .= '<tr>';
+        foreach ($r as $cell) {
+            $output .= '<td>' . nl2br(htmlspecialchars($cell)) . '</td>';
+        }
+        $output .= '</tr>';
+    }
+    $output .= '</tbody></table>';
+
+    return $output;
+}
+
+function renderContent($body, $label) {
     $subTitle = trim((string)($body['subTitle'] ?? ''));
     $richText = (string)($body['richText'] ?? '');
-    
+
     $output = '';
-    
+
     // Show subtitle if explicitly provided
     $unwantedSubtitles = [];
     if (!empty($subTitle) && !in_array($subTitle, $unwantedSubtitles)) {
         $output .= '<h4 class="content-subtitle">' . htmlspecialchars($subTitle) . '</h4>';
     }
-    
+
     // Convert text to bullet points like Django version
     $lines = array_filter(array_map('trim', explode("\n", $richText)));
     if (count($lines) > 1) {
@@ -223,14 +212,14 @@ Thanking you.
             }
         }
         $output .= '</ul>';
-    } else if (!empty(trim($richText))) {
+    } elseif (!empty(trim($richText))) {
         $output .= '<div class="content-text">' . nl2br(htmlspecialchars($richText)) . '</div>';
     }
-    
+
     return $output;
 }
+?>
 
-  ?>
 
   <?php if (!empty($proposal_data['include_about'])): ?>
     <section class="page about">

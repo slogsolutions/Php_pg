@@ -361,60 +361,64 @@ body {
   font-family: Cambria, serif;
 }
 
-/* Table styles - IMPROVED BORDERS */
+/* Table container */
 .proposal-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 0; /* Changed from 8px to 0 */
-  margin-bottom: 15px;
+  margin-top: 0;       /* no extra top gap */
+  margin-bottom: 15px; /* space below table */
   table-layout: fixed;
   font-family: Cambria, serif;
-  border: 2px solid #000;
+  border: 2px solid #000; /* outer border */
 }
 
-.proposal-table caption {
-  caption-side: top;
-  text-align: center;
-  font-weight: 700;
-  font-size: 12pt;
-  padding: 6px 10px;
+/* Title row inside the table */
+.proposal-table .table-title-row .table-title {
   background: #d8e4bc;
-  font-family: Cambria, serif;
-  border: 2px solid #000; /* Full border */
-  border-bottom: 2px solid #000; /* Keep the bottom border */
-  margin: 0; /* Remove any margin */
-  display: table-caption; /* Ensure proper display */
+  font-size: 12pt;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px;
+  border-bottom: 2px solid #000;
+  /* spans full width via colspan in HTML */
 }
 
-.proposal-table th,
-.proposal-table td {
-  border: 1px solid #777; 
-  padding: 6px; 
-  vertical-align: top; 
+/* Column headers */
+.proposal-table thead tr:nth-child(2) th {
+  background: #e7f3d9;
+  font-weight: 700;
+  text-align: left;
+  border: 1px solid #777;
+  padding: 6px;
   font-size: 11pt;
-  word-wrap: break-word;     
+}
+
+/* All data cells */
+.proposal-table td {
+  border: 1px solid #777;
+  padding: 6px;
+  vertical-align: top;
+  font-size: 11pt;
+  word-wrap: break-word;
   overflow-wrap: break-word;
   font-family: Cambria, serif;
   line-height: 1.2;
 }
 
-.proposal-table th {
+/* First column styling (key column) */
+.proposal-table td:first-child {
+  width: 30%;
   font-weight: 700;
-  background: #e7f3d9;
+  white-space: nowrap;
   text-align: left;
 }
 
-.proposal-table td:first-child {
-  width: 30%;    
-  font-weight: 700;
-  white-space: nowrap;     
-  text-align: left;        
-}
-
+/* Remaining columns */
 .proposal-table td:nth-child(n+2) {
   width: 70%;
   white-space: normal;
 }
+
 
 /* Content styles */
 .content-text {
