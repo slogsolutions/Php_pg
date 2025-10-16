@@ -1,6 +1,6 @@
 @page { 
   size: A4; 
-  margin: 10mm 10mm 10mm 10mm; 
+  margin: 10mm 10mm 2mm 10mm; 
 }
 
 body { 
@@ -27,20 +27,20 @@ body {
 /* Cover page - no break after (was causing blank pages) */
 .page.cover {
   min-height: auto;
-  page-break-before: avoid;  /* ADD THIS LINE */
-  page-break-inside: avoid;
+  /* page-break-before: auto !important;  
+  page-break-inside: avoid; */
 }
 
 
-/* Intro/content page - keep together but don't force new page before it */
 .page.content {
-  page-break-inside: avoid;
+  min-height: auto;
+  /* page-break-inside: avoid; */
 }
 
 /* Program structure pages - MUST start on new page */
 .page.program-structure {
   page-break-before: always;
-  page-break-inside: avoid;
+  /* page-break-inside: avoid; */
 }
 
 /* About section - start on new page */
@@ -64,7 +64,7 @@ body {
   margin: 0 auto;
   flex-direction: column;
   align-items: center;
-  padding: 20px 20px 10px 20px;
+  padding: 20px 10px 10px 10px;
   box-sizing: border-box;
   font-family: Cambria, serif;
   position: relative;
@@ -75,7 +75,7 @@ body {
 .title-block { 
   text-align: center; 
   margin-top: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   font-family: Cambria, serif;
 }
 
@@ -92,7 +92,7 @@ body {
 
 /* 2) Title text (red, large, underlined) */
 .program {
-  margin-top: 15px;
+  margin-top: 10px;
   display: block;
   font-size: 28pt;
   font-weight: 900;
@@ -134,7 +134,7 @@ body {
 /* Delivered by block */
 .delivered-by { 
   text-align: center; 
-  margin-top: 20px;
+  margin-top: 10px;
   margin-bottom: 20px;
   font-family: Cambria, serif;
 }
@@ -167,35 +167,35 @@ body {
   display: inline-block;
 }
 
-/* Banner (middle artwork) */
 .banner-wrap {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 15px;
-  margin-bottom: 20px;
+  margin-top: 20px;    /* Slightly larger top margin */
+  margin-bottom: 25px; /* Increase space below banner */
 }
 
 .banner-wrap .banner {
-  max-width: 100%;
+  max-width: 100%;      /* Expand banner width */
   height: auto;
   display: block;
-  margin: 0 auto;
 }
+
 
 /* BOTTOM STRIP - full width */
 .bottom-strip {
   width: 100%;
   text-align: center;
-  margin-top: 15px;
-  margin-bottom: 15px;
+  margin-top: 25px;    /* Adds the gap between banner and strip */
+  margin-bottom: 30px; /* More breathing room below */
 }
 
 .strip-bottom {
-  width: 100%;
+  max-width: 100%;      /* Matches banner width */
   height: auto;
   display: inline-block;
 }
+
 
 /* Footer with left text and right date - FIXED POSITIONING */
 .cover-footer {

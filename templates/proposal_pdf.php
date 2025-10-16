@@ -52,7 +52,7 @@ $asset = function (string $rel) use ($publicRoot): string {
     </section>
 
     <!-- ===== Content pages: intro ===== -->
-    <section class="page content">
+    <section class="page content" style="text-align: justify;">
         <div class="content-header">
             <div class="content-title">
                 PROPOSAL FOR <?= htmlspecialchars($proposal_data["title"]) ?>
