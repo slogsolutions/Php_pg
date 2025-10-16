@@ -11,15 +11,51 @@ body {
   line-height: 1.2;
 }
 
-/* Each printable page container */
+/* ========================================
+   PAGE BREAK RULES - CORRECTED VERSION
+   ======================================== */
+
+/* Base page - no forced breaks */
 .page { 
   width: 100%; 
   position: relative; 
   box-sizing: border-box; 
-  min-height: 297mm;
   font-family: Cambria, serif;
   line-height: 1.2;
 }
+
+/* Cover page - no break after (was causing blank pages) */
+.page.cover {
+  min-height: auto;
+  page-break-before: avoid;  /* ADD THIS LINE */
+  page-break-inside: avoid;
+}
+
+
+/* Intro/content page - keep together but don't force new page before it */
+.page.content {
+  page-break-inside: avoid;
+}
+
+/* Program structure pages - MUST start on new page */
+.page.program-structure {
+  page-break-before: always;
+  page-break-inside: avoid;
+}
+
+/* About section - start on new page */
+.page.about {
+  page-break-before: always;
+  page-break-inside: avoid;
+}
+
+/* Technologies section - start on new page */
+.page.technologies {
+  page-break-before: always;
+  page-break-inside: avoid;
+}
+
+
 
 /* COVER container */
 .cover-inner {
@@ -161,92 +197,113 @@ body {
   display: inline-block;
 }
 
-/* Footer with left text and right date - FIXED */
+/* Footer with left text and right date - FIXED POSITIONING */
 .cover-footer {
   position: absolute;
   bottom: 20px;
-  left: 0;
-  right: 0;
-  padding: 0 20px;
+  left: 20px;
+  right: 20px;
   font-size: 11pt;
   color: #222;
   font-family: Cambria, serif;
 }
 
 .footer-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: table;
   width: 100%;
+  table-layout: fixed;
 }
 
 .footer-left {
+  display: table-cell;
+  width: 60%;
   font-size: 11pt;
   font-weight: 600;
   font-family: Cambria, serif;
+  white-space: nowrap;
+  text-align: left;
 }
 
 .footer-right {
+  display: table-cell;
+  width: 40%;
   font-size: 11pt;
   font-weight: 600;
   font-family: Cambria, serif;
+  white-space: nowrap;
+  text-align: right;
+  vertical-align: top;
 }
 
-/* Content page styles */
+
+
 .content { 
-  padding: 15px 20px; 
+  padding: 10px 15px 15px 10px; /* Reduced left padding from 15px to 10px */
   font-family: Cambria, serif;
   line-height: 1.2;
+  margin: 0; /* Ensure no extra margin */
 }
 
-/* Content header - aligned to left and right */
+
 .content-header {
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 0; /* Changed from 8px to 0 */
+  margin-left: 0;
+  padding-left: 0;
   font-family: Cambria, serif;
 }
 
 .content-title {
   font-size: 14pt;
   font-weight: 700;
-  margin-bottom: 2px;
+  margin-bottom: 1px; /* Reduced from 2px */
   text-align: left;
   font-family: Cambria, serif;
 }
 
 .content-subheader {
   width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2px;
+  display: table; /* Changed from flex to table */
+  table-layout: fixed;
+  margin-bottom: 1px; /* Reduced from 2px */
   font-family: Cambria, serif;
 }
 
 .content-for {
+  display: table-cell;
+  width: 60%;
   font-size: 14pt;
   font-weight: 700;
   color: #c42020; 
   font-family: Cambria, serif;
+  text-align: left;
+  vertical-align: baseline;
 }
 
 .content-date {
+  display: table-cell;
+  width: 40%;
   font-size: 14pt; 
   font-weight: 700; 
   color: #000;
   font-family: Cambria, serif;
   text-align: right;
+  vertical-align: baseline;
+  white-space: nowrap;
 }
 
 .content-by {
   font-size: 14pt;
   font-weight: 700;
   text-align: left;
-  margin-bottom: 8px;
-  padding-bottom: 4px;
+  margin-top: 1px; /* Reduced from default */
+  margin-bottom: 3px; /* Reduced from 6px */
+  padding-top: 1px; /* Add minimal padding */
+  padding-bottom: 2px; /* Reduced from 3px */
   border-bottom: 2px solid #000;
   font-family: Cambria, serif;
 }
+
 
 /* INTRODUCTION label (green strip) */
 .intro-title {
@@ -286,7 +343,7 @@ body {
   text-align: center;
   font-weight: 800;
   font-size: 14pt;
-  margin-bottom: 14px;
+  margin-bottom: 12px; /* Reduced margin */
   padding: 6px 10px;
   background: #d8e4bc;
   border-bottom: 2px solid #000;
@@ -304,15 +361,15 @@ body {
   font-family: Cambria, serif;
 }
 
-/* Table styles */
-.proposal-table { 
-  width: 100%; 
-  border-collapse: collapse; 
-  margin-top: 8px; 
+/* Table styles - IMPROVED BORDERS */
+.proposal-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0; /* Changed from 8px to 0 */
   margin-bottom: 15px;
   table-layout: fixed;
   font-family: Cambria, serif;
-  border: 1px solid #777;
+  border: 2px solid #000;
 }
 
 .proposal-table caption {
@@ -322,8 +379,11 @@ body {
   font-size: 12pt;
   padding: 6px 10px;
   background: #d8e4bc;
-  border-bottom: 2px solid #000;
   font-family: Cambria, serif;
+  border: 2px solid #000; /* Full border */
+  border-bottom: 2px solid #000; /* Keep the bottom border */
+  margin: 0; /* Remove any margin */
+  display: table-caption; /* Ensure proper display */
 }
 
 .proposal-table th,
@@ -466,5 +526,8 @@ ul {
   .page { 
     margin: 0;
     padding: 0;
+  }
+  .content {
+    padding: 15px 15px;
   }
 }

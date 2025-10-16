@@ -165,7 +165,7 @@ Thanking you.
       if (!empty($rows)) {
           $output .= '<table class="proposal-table">';
           
-          // Add table caption for title with green background
+          // Add table caption for title with green background and border
           if (!empty($title)) {
               $output .= '<caption class="table-caption">' . htmlspecialchars($title) . '</caption>';
           }
@@ -202,33 +202,34 @@ Thanking you.
   }
   
   function renderContent($body, $label) {
-      $subTitle = trim((string)($body['subTitle'] ?? $label ?: 'Course Content'));
-      $richText = (string)($body['richText'] ?? '');
-      
-      $output = '';
-      
-      // Only show subtitle if it's not unwanted text and we haven't used it as page title
-      $unwantedSubtitles = ['AI', 'ML', 'Cover'];
-      if (!in_array($subTitle, $unwantedSubtitles) && !empty($subTitle) && $subTitle !== $label) {
-          $output .= '<h4 class="content-subtitle">' . htmlspecialchars($subTitle) . '</h4>';
-      }
-      
-      // Convert text to bullet points like Django version
-      $lines = array_filter(array_map('trim', explode("\n", $richText)));
-      if (count($lines) > 1) {
-          $output .= '<ul>';
-          foreach ($lines as $line) {
-              if (!empty(trim($line))) {
-                  $output .= '<li>' . htmlspecialchars($line) . '</li>';
-              }
-          }
-          $output .= '</ul>';
-      } else if (!empty(trim($richText))) {
-          $output .= '<div class="content-text">' . nl2br(htmlspecialchars($richText)) . '</div>';
-      }
-      
-      return $output;
-  }
+    $subTitle = trim((string)($body['subTitle'] ?? ''));
+    $richText = (string)($body['richText'] ?? '');
+    
+    $output = '';
+    
+    // Show subtitle if explicitly provided
+    $unwantedSubtitles = [];
+    if (!empty($subTitle) && !in_array($subTitle, $unwantedSubtitles)) {
+        $output .= '<h4 class="content-subtitle">' . htmlspecialchars($subTitle) . '</h4>';
+    }
+    
+    // Convert text to bullet points like Django version
+    $lines = array_filter(array_map('trim', explode("\n", $richText)));
+    if (count($lines) > 1) {
+        $output .= '<ul>';
+        foreach ($lines as $line) {
+            if (!empty(trim($line))) {
+                $output .= '<li>' . htmlspecialchars($line) . '</li>';
+            }
+        }
+        $output .= '</ul>';
+    } else if (!empty(trim($richText))) {
+        $output .= '<div class="content-text">' . nl2br(htmlspecialchars($richText)) . '</div>';
+    }
+    
+    return $output;
+}
+
   ?>
 
   <?php if (!empty($proposal_data['include_about'])): ?>
@@ -247,7 +248,7 @@ Thanking you.
         <li>SLOG is collaborated with IIT Roorkee Alumni Association DC</li>
         <li>SLOG is also collaborated with 100 year old Institution of Engineering, India.</li>
         <li>SLOG is Certiport Authorized Testing Centre (CATC) for BRAND CERTIFICATION of <span class="highlight-red">Autodesk, QuickBooks, Microsoft, Apple and Adobe.</span></li>
-        <li>SLOG Deliver more than <span class="highlight-red">70 + Technical programs to Ministry of Defense (Indian Army, Indian Navy)</span> in <span class="highlight-red">PAN India</span> Includes: Southern Command (Pune), Western Command (Chandigarh), MCEME Schendrabad, Jammu &amp; Kashmir, Assam, Telangana, Amritsar, Dehradun, Haridwar, Bangalore, Schendrabad and many more.</li>
+        <li>SLOG Deliver more than <span class="highlight-red">70 + Technical programs to Ministry of Defense (Indian Army, Indian Navy)</span> in <span class="highlight-red">PAN India</span> Includes: Southern Command (Pune), Western Command (Chandimarh), MCEME Schendrabad, Jammu &amp; Kashmir, Assam, Telangana, Amritsar, Dehradun, Haridwar, Bangalore, Schendrabad and many more.</li>
         <li>SLOG Deliver more than 200+ Corporate / Professional Trainings / Faculty development programs include organizations like DRDO, ORDNANCE (OFIL), KV faculties, UBTER, UTU, World Bank projects and many more.</li>
         <li>SLOG Deliver more than 800+ Student Development program, benefited more than 30,000 students.</li>
         <li>SLOG deliver Virtual training program in online mode to 15,000+ polytechnic students at a time.</li>
