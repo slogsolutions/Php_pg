@@ -154,10 +154,21 @@ function renderPageItems($items) {
 }
 
 function renderTable($body, $label) {
-    $cols  = $body['columns'] ?? [];
-    $rows  = $body['rows']    ?? [];
-    $title = $body['title']   ?? $label ?: 'Table';
+    $cols      = $body['columns'] ?? [];
+    $rows      = $body['rows']    ?? [];
+    $title     = $body['title']   ?? $label ?: 'Table';
+    $showCols  = isset($body['showColumns']) ? (bool)$body['showColumns'] : null;
+
     if (empty($rows)) return '';
+
+    // Normalise column names for comparison
+    $normalizedCols = array_map(function($c){ return strtolower(trim((string)$c)); }, $cols);
+
+    // If showColumns not explicitly set, auto-hide when columns are ['label','content']
+    if ($showCols === null) {
+        $autoHide = ($normalizedCols === ['label', 'content']);
+        $showCols = !$autoHide;
+    }
 
     // Start table
     $output  = '<table class="proposal-table">';
@@ -169,13 +180,18 @@ function renderTable($body, $label) {
     $output .= '<th class="table-title" colspan="' . $colCount . '">'
              . htmlspecialchars($title)
              . '</th>';
-    if (!empty($cols)) {
-        $output .= '</tr><tr>';
+    $output .= '</tr>';
+
+    // Render column header row only if showCols true and columns exist
+    if ($showCols && !empty($cols)) {
+        $output .= '<tr class="table-col-headers">';
         foreach ($cols as $c) {
             $output .= '<th>' . htmlspecialchars($c) . '</th>';
         }
+        $output .= '</tr>';
     }
-    $output .= '</tr></thead><tbody>';
+
+    $output .= '</thead><tbody>';
 
     // Render rows
     foreach ($rows as $r) {
@@ -189,6 +205,7 @@ function renderTable($body, $label) {
 
     return $output;
 }
+
 
 function renderContent($body, $label) {
     $subTitle = trim((string)($body['subTitle'] ?? ''));
