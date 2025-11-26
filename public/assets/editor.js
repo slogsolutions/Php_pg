@@ -216,6 +216,26 @@ let items = Array.isArray(window.__INITIAL_ITEMS__) && window.__INITIAL_ITEMS__.
             }
             tr.appendChild(td);
           });
+
+          // ---------- ADD: Delete button cell for this row ----------
+          const tdDel = document.createElement('td');
+          const btnDel = document.createElement('button');
+          btnDel.type = 'button';
+          btnDel.className = 'btn-delete-row';
+          btnDel.title = 'Delete row';
+          btnDel.textContent = '✖';
+          btnDel.onclick = function (ev) {
+            ev.preventDefault();
+            // remove the row at index ri and re-render
+            rows.splice(ri, 1);
+            updateItem();
+            renderBlocks();
+            safeSerialize();
+          };
+          tdDel.appendChild(btnDel);
+          tr.appendChild(tdDel);
+          // ----------------------------------------------------------
+
           tbody.appendChild(tr);
         });
 
