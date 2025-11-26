@@ -1,0 +1,8 @@
+{
+    "cambria": {
+        "normal": "E:\\FINAL YEAR PROJECTS\\Php_pg-main\\vendor\\dompdf\\dompdf\/lib\/fonts\/cambria_normal_d0ee8afe340765d8389b45a69789f5c4",
+        "bold": "E:\\FINAL YEAR PROJECTS\\Php_pg-main\\vendor\\dompdf\\dompdf\/lib\/fonts\/cambria_bold_67d1eea1399d68bb94e0132f8a08f0cb",
+        "italic": "E:\\FINAL YEAR PROJECTS\\Php_pg-main\\vendor\\dompdf\\dompdf\/lib\/fonts\/cambria_italic_4850cf7de8f871cb0c557c1f23ca4d4e",
+        "bold_italic": "cambria_bold_italic_9aea20bb8bc0c8979fa7704c96e3b484"
+    }
+}

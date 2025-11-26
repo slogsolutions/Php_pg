@@ -16,7 +16,8 @@ body {
    ======================================== */
 
 /* Base page - no forced breaks */
-.page { 
+.page 
+{ 
   width: 100%; 
   position: relative; 
   box-sizing: border-box; 

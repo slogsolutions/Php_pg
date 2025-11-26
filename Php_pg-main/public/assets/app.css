@@ -1,0 +1,89 @@
+
+:root{
+  --bg1:#6a11cb;
+  --bg2:#2575fc;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --text:#0f172a;
+  --brand:#ff5f6d;
+  --brand2:#ffc371;
+  --danger:#ef4444;
+  --ring: rgba(59,130,246,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
+  color:var(--text);
+  background: radial-gradient(1200px 600px at 20% -10%, rgba(255,255,255,.85), transparent 40%),
+             linear-gradient(135deg,var(--bg1),var(--bg2));
+}
+.container{max-width:1200px;margin:0 auto;padding:28px}
+.headerbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.logo{font-size:22px;font-weight:800;color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.2)}
+.toolbar{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.8);padding:12px 14px;border-radius:16px;backdrop-filter: blur(8px)}
+.search{padding:10px 12px;border:1px solid #e5e7eb;border-radius:12px;min-width:320px;outline:none}
+select{padding:10px;border-radius:12px;border:1px solid #e5e7eb;background:#fff}
+.btn{padding:10px 14px;border-radius:999px;border:1px solid #e5e7eb;background:#fff;text-decoration:none;color:#111;display:inline-flex;gap:8px;align-items:center;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.btn.primary{background:linear-gradient(90deg,#fb7185,#f59e0b);color:#fff;border:none}
+.btn.ghost{background:transparent;border-color:transparent;color:#111}
+.btn.danger{background:rgba(239,68,68,.1);color:#b91c1c;border:1px solid rgba(239,68,68,.35)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;margin-top:16px}
+.proposal-card{background:rgba(255,255,255,.9);backdrop-filter: blur(8px);border-radius:22px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.proposal-card header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.proposal-card h3{margin:0;font-size:18px;letter-spacing:.5px}
+.proposal-card h3 .muted{opacity:.6}
+.proposal-card .for{font-size:12px;background:#eef2ff;border:1px solid #e0e7ff;color:#3730a3;padding:6px 10px;border-radius:999px}
+.proposal-card footer{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+.two-col{display:grid;grid-template-columns:260px 1fr;gap:18px}
+.pages-rail{background:rgba(255,255,255,.85);border-radius:18px;padding:12px;box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.page-chip{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px;margin-bottom:8px;cursor:pointer}
+.page-chip.active{border-color:#93c5fd;box-shadow:0 0 0 4px var(--ring)}
+.page-chip .num{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#f472b6,#60a5fa);color:#fff;font-weight:700;display:grid;place-items:center}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{font-size:11px;padding:2px 8px;border-radius:999px;background:#f3f4f6;border:1px solid #e5e7eb}
+.editor{background:rgba(255,255,255,.95);border-radius:18px;padding:18px;box-shadow:0 12px 28px rgba(0,0,0,.12)}
+.field{margin-bottom:14px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+input[type="text"],input[type="date"],textarea{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:12px;outline:none}
+textarea{min-height:140px;resize:vertical}
+.section-title{font-weight:800;margin:6px 0 12px 0}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.table-editor table{width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden}
+.table-editor th,.table-editor td{border-bottom:1px solid #e5e7eb;padding:10px;text-align:left;background:#fff}
+.table-editor th{background:#f8fafc}
+.kebab{justify-self:end}
+hr.sep{border:none;height:1px;background:#e5e7eb;margin:18px 0}
+.small{font-size:12px;color:var(--muted)}
+.toggle-row {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin: 8px 0 16px;
+  flex-wrap: wrap;
+}
+
+.pill-toggle {
+  display:inline-flex;
+  align-items:center;
+  border:1px solid #e5e7eb;
+  border-radius:9999px;
+  padding:6px 10px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+  cursor:pointer;
+  user-select:none;
+  background:#fff;
+  font-weight:600;
+  font-size:14px;
+}
+
+.pill-toggle input {
+  margin-right:8px;
+  transform: translateY(0.5px);
+}
+.pill-toggle input:checked + span {
+  /* subtle “active” cue similar to your React UI */
+  text-decoration: none;
+}

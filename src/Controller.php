@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth.php'; // Added auth.php
 require_once __DIR__ . '/ProposalModel.php';
 require_once __DIR__ . '/PdfService.php';
 
@@ -11,7 +12,81 @@ function _section_count_from_request($default = 10) {
     return $n;
 }
 
+// =================================================================================================
+// User Management Functions
+// =================================================================================================
+
+function route_user_new_form($errors = [], $old = []) {
+    if (!is_admin()) {
+        http_response_code(403);
+        echo 'Access Denied';
+        exit;
+    }
+    include __DIR__ . '/../templates/user_new.php';
+}
+
+function route_user_create() {
+    if (!is_admin()) {
+        http_response_code(403);
+        echo 'Access Denied';
+        exit;
+    }
+
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $errors = [];
+
+    if (empty($username)) {
+        $errors[] = 'Username is required.';
+    }
+    if (empty($password)) {
+        $errors[] = 'Password is required.';
+    }
+    
+    if (count($errors) > 0) {
+        return route_user_new_form($errors, ['username' => $username]);
+    }
+
+    $db = db();
+    
+    // Check if user already exists
+    $stmt = $db->prepare('SELECT id FROM users WHERE username = ?');
+    $stmt->execute([$username]);
+    if ($stmt->fetch()) {
+        $errors[] = 'User with this username already exists.';
+        return route_user_new_form($errors, ['username' => $username]);
+    }
+
+    // Hash the password and insert the new user as 'employee'
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    $stmt = $db->prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
+    $stmt->execute([$username, $hashed_password, 'employee']);
+
+    header('Location: index.php?action=list'); // Redirect to proposal list after creation
+    exit;
+}
+
+// =================================================================================================
+// Proposal Management Functions
+// =================================================================================================
+
 function route_delete($id) {
+    // Authorization check: Only admin or the proposal owner can delete
+    $proposal = proposal_get_raw($id);
+    $user = current_user();
+
+    if (!$proposal) {
+        http_response_code(404);
+        echo 'Not found';
+        exit;
+    }
+
+    if (!is_admin() && $user['id'] !== (int)$proposal['user_id']) {
+        http_response_code(403);
+        echo 'Access Denied';
+        exit;
+    }
+
     proposal_delete($id);
     header("Location: index.php");
     exit();
@@ -28,6 +103,12 @@ function route_list() {
         'to'          => $_GET['to']          ?? '',    // YYYY-MM-DD
     ];
 
+    // Add user-specific filtering
+    $user = current_user();
+    if (!is_admin()) {
+        $filters['user_id'] = $user['id'];
+    }
+
     $proposals = proposal_search($filters);
 
     // pass filters to view so inputs can stay filled
@@ -38,9 +119,12 @@ function route_list() {
 
 
 function route_new_form($errors = [], $old = []) {
+    // Allow admins and employees to create proposals.
+    // The previous restriction that prevented a hardcoded admin (id=0) from creating proposals was removed.
     $section_count = _section_count_from_request(10);
     include __DIR__ . '/../templates/new.php';
 }
+
 
 /**
  * Build proposal_items array from POST.
@@ -108,8 +192,6 @@ function build_items_from_post(): array {
                     continue;
                 }
                 
-                // REMOVED: NEW: COURSE DETAILS / KEY-VALUE TABLE logic
-                
                 // CONTENT (default)
                 $b    = is_array($it['body'] ?? null) ? $it['body'] : [];
                 $sub  = trim((string)($b['subTitle'] ?? ($label !== '' ? $label : 'Course Content')));
@@ -156,7 +238,10 @@ function build_items_from_post(): array {
 }
 
 function route_create() {
+    $user = current_user();
+    // Allow admins and employees to create proposals.
     $data = [
+        'user_id' => $user['id'], // Assign proposal to the logged-in user
         'title' => $_POST['title'] ?? 'IT TRAINING PROGRAM',
         'for_whom' => $_POST['for_whom'] ?? '',
         'recipient' => $_POST['recipient'] ?? '',
@@ -181,15 +266,34 @@ function route_create() {
     exit;
 }
 
+
 function route_show($id) {
     list($proposal, $items) = proposal_get($id);
     if (!$proposal) { http_response_code(404); echo 'Not found'; return; }
+
+    // Authorization check: Only admin or the proposal owner can view
+    $user = current_user();
+    if (!is_admin() && $user['id'] !== (int)$proposal['user_id']) {
+        http_response_code(403);
+        echo 'Access Denied';
+        exit;
+    }
+
     include __DIR__ . '/../templates/show.php';
 }
 
 function route_download_pdf($id) {
     list($proposal, $items) = proposal_get($id);
     if (!$proposal || !$proposal['generated_pdf']) { http_response_code(404); echo 'PDF not found'; return; }
+
+    // Authorization check: Only admin or the proposal owner can download
+    $user = current_user();
+    if (!is_admin() && $user['id'] !== (int)$proposal['user_id']) {
+        http_response_code(403);
+        echo 'Access Denied';
+        exit;
+    }
+
     $filepath = STORAGE_PATH . '/' . $proposal['generated_pdf'];
     if (!is_file($filepath)) { http_response_code(404); echo 'File missing'; return; }
     header('Content-Type: application/pdf');
@@ -201,6 +305,14 @@ function route_download_pdf($id) {
 function route_edit_form($id) {
     list($proposal, $items) = proposal_get($id);
     if (!$proposal) { http_response_code(404); echo 'Not found'; return; }
+
+    // Authorization check: Only admin or the proposal owner can edit
+    $user = current_user();
+    if (!is_admin() && $user['id'] !== (int)$proposal['user_id']) {
+        http_response_code(403);
+        echo 'Access Denied';
+        exit;
+    }
 
     // Decode the JSON bodies so the editor can rebuild pages/tables/content
     $items_for_editor = [];
@@ -230,8 +342,6 @@ function route_edit_form($id) {
                 ];
                 continue;
             }
-
-            // REMOVED: NEW: COURSE DETAILS / KEY-VALUE TABLE logic
             
             // content
             $items_for_editor[] = [
@@ -264,6 +374,14 @@ function route_edit_form($id) {
 function route_update($id) {
     list($proposal, $itemsExisting) = proposal_get($id);
     if (!$proposal) { http_response_code(404); echo 'Not found'; return; }
+
+    // Authorization check: Only admin or the proposal owner can update
+    $user = current_user();
+    if (!is_admin() && $user['id'] !== (int)$proposal['user_id']) {
+        http_response_code(403);
+        echo 'Access Denied';
+        exit;
+    }
 
     $data = [
         'title' => $_POST['title'] ?? $proposal['title'],
