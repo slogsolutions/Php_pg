@@ -25,6 +25,20 @@ $FIRST_COL_OPTIONS = [
     <?php if(isset($proposal)): ?>
       <input type="hidden" name="id" value="<?= (int)$proposal['id'] ?>">
     <?php endif; ?>
+    <?php if (function_exists('is_admin') && is_admin()): ?>
+  <div class="field">
+    <label>Create proposal for (employee)</label>
+    <select name="user_id" required>
+      <option value="">— select employee —</option>
+      <?php foreach ($EMPLOYEES as $emp): ?>
+        <option value="<?= intval($emp['id']) ?>" <?= (isset($proposal['user_id']) && intval($proposal['user_id']) === intval($emp['id'])) ? 'selected' : '' ?>>
+          <?= htmlspecialchars($emp['username']) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+  </div>
+<?php endif; ?>
+
     <input type="hidden" name="items" id="items-json">
 
     <div class="two-col">

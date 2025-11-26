@@ -4,6 +4,14 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/auth.php'; // Added auth.php
 require_once __DIR__ . '/ProposalModel.php';
 require_once __DIR__ . '/PdfService.php';
+// --------- helper: fetch employees for admin proposal creation ---------
+function fetch_employees_simple(): array {
+    $db = db();
+    $stmt = $db->prepare('SELECT id, username FROM users WHERE role = ? ORDER BY username ASC');
+    $stmt->execute(['employee']);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+// ----------------------------------------------------------------------
 
 function _section_count_from_request($default = 10) {
     $n = isset($_GET['n']) ? intval($_GET['n']) : $default;
@@ -122,8 +130,16 @@ function route_new_form($errors = [], $old = []) {
     // Allow admins and employees to create proposals.
     // The previous restriction that prevented a hardcoded admin (id=0) from creating proposals was removed.
     $section_count = _section_count_from_request(10);
+
+    // If admin, load employees for the dropdown in the form
+    $EMPLOYEES = [];
+    if (function_exists('is_admin') && is_admin()) {
+        $EMPLOYEES = fetch_employees_simple();
+    }
+
     include __DIR__ . '/../templates/new.php';
 }
+
 
 
 /**
@@ -239,9 +255,31 @@ function build_items_from_post(): array {
 
 function route_create() {
     $user = current_user();
-    // Allow admins and employees to create proposals.
+
+    // ============================
+    // Determine owner_id
+    // ============================
+    if (function_exists('is_admin') && is_admin() && !empty($_POST['user_id'])) {
+        $sel = intval($_POST['user_id']);
+        $db = db();
+
+        $check = $db->prepare('SELECT id FROM users WHERE id = ? AND role = ?');
+        $check->execute([$sel, 'employee']);
+        
+        if ($check->fetch()) {
+            $owner_id = $sel;   // admin-selected user
+        } else {
+            $owner_id = $user['id']; // fallback
+        }
+    } else {
+        $owner_id = $user['id']; // employee creating their own proposal
+    }
+
+    // ============================
+    // Build data array
+    // ============================
     $data = [
-        'user_id' => $user['id'], // Assign proposal to the logged-in user
+        'user_id' => $owner_id,
         'title' => $_POST['title'] ?? 'IT TRAINING PROGRAM',
         'for_whom' => $_POST['for_whom'] ?? '',
         'recipient' => $_POST['recipient'] ?? '',
@@ -255,16 +293,23 @@ function route_create() {
         'include_technologies' => isset($_POST['include_technologies']) ? 1 : 0,
     ];
 
+    // Build items
     $items = build_items_from_post();
 
+    // Create proposal
     $id = proposal_create($data, $items);
+
     list($proposal, $its) = proposal_get($id);
+
+    // Generate PDF
     $pdf_filename = render_proposal_pdf($proposal, $its);
     proposal_set_pdf($id, $pdf_filename);
 
     header('Location: index.php?action=list');
     exit;
 }
+
+
 
 
 function route_show($id) {
